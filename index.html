@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Liquid Search - Ultimate Morandi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 20s ease-in-out infinite',
+                        'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        'slide-down': 'slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.95)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    },
+                    borderRadius: {
+                        'apple': '20px', 
+                        'panel': '32px',
+                    },
+                    colors: {
+                        // 占位，实际由 JS 注入变量
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-blob-1: #E0E7FF;
+            --bg-blob-2: #FFE4E6;
+            --bg-blob-3: #FEF3C7;
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-surface: rgba(255, 255, 255, 0.45);
+            --text-primary: #1F2937;
+            --text-secondary: #4B5563;
+        }
+
+        /* 黑夜模式变量 */
+        html.dark {
+            --bg-blob-1: #1e1b4b; /* Deep Indigo */
+            --bg-blob-2: #312e81; /* Dark Indigo */
+            --bg-blob-3: #111827; /* Gray 900 */
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-surface: rgba(20, 20, 25, 0.75);
+            --text-primary: #F3F4F6;
+            --text-secondary: #9CA3AF;
+        }
+
+        body {
+            background-color: #F3F4F6;
+            color: var(--text-primary);
+            /* 关键：平滑过渡，避免日夜切换闪烁 */
+            transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
+            overflow-x: hidden;
+        }
+        html.dark body {
+            background-color: #050505;
+        }
+
+        /* --- 极致液态背景 --- */
+        .liquid-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px); /* 强模糊 */
+            opacity: 0.8;
+            animation: float 25s infinite alternate;
+            transition: background-color 1s ease, opacity 0.5s ease;
+        }
+        
+        /* 混合模式让颜色融合 */
+        html:not(.dark) .blob { mix-blend-mode: multiply; }
+        html.dark .blob { mix-blend-mode: hard-light; opacity: 0.3; }
+
+        .blob-1 { top: -10%; left: -10%; width: 60vw; height: 60vw; background: var(--bg-blob-1); }
+        .blob-2 { bottom: -10%; right: -10%; width: 70vw; height: 70vw; background: var(--bg-blob-2); animation-delay: -5s; }
+        .blob-3 { top: 30%; left: 30%; width: 50vw; height: 50vw; background: var(--bg-blob-3); animation-delay: -10s; }
+
+        /* --- 液态玻璃面板 --- */
+        .glass-panel {
+            background: var(--glass-surface);
+            backdrop-filter: blur(50px) saturate(160%); /* 苹果级毛玻璃 */
+            -webkit-backdrop-filter: blur(50px) saturate(160%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 20px 40px -10px rgba(0,0,0,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 悬停微动 */
+        .glass-panel:hover {
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        html.dark .glass-panel {
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+        }
+
+        /* --- 交互元素 --- */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        html.dark .glass-input {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+        .glass-input:focus {
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
+            transform: scale(1.005);
+        }
+        html.dark .glass-input:focus {
+            background: rgba(30, 30, 35, 1);
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.1);
+        }
+
+        /* 自定义按钮 */
+        .action-btn {
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-btn:active { transform: scale(0.96); }
+        /* 按钮光泽动画 */
+        .action-btn::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.2), transparent);
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .action-btn:hover::after { opacity: 1; }
+
+        /* --- 布局微调 --- */
+        /* 右侧收起条 (Side Strip) */
+        .side-strip {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 20px; /* 用户要求的 15-23px */
+            cursor: pointer;
+            z-index: 20;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; /* 默认隐藏 */
+        }
+        .side-strip:hover {
+            background-color: rgba(0,0,0,0.05);
+            opacity: 1;
+        }
+        html.dark .side-strip:hover { background-color: rgba(255,255,255,0.1); }
+        /* 竖条内的图标装饰 */
+        .side-strip::before {
+            content: ''; height: 20px; width: 4px; border-radius: 2px; background: currentColor; opacity: 0.3;
+        }
+
+        /* 底部收起按钮 */
+        .bottom-collapse-btn {
+            background: rgba(0,0,0,0.02);
+            border-top: 1px solid rgba(0,0,0,0.03);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .bottom-collapse-btn:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
+        }
+        html.dark .bottom-collapse-btn {
+            background: rgba(255,255,255,0.02);
+            border-top-color: rgba(255,255,255,0.05);
+        }
+        html.dark .bottom-collapse-btn:hover { background: rgba(255,255,255,0.08); }
+
+        /* 图标盒子 */
+        .icon-box {
+            /* 黑夜模式下保持高对比度 */
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 0; }
+        
+        /* Toast */
+        .toast {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 14px 30px;
+            border-radius: 99px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        html.dark .toast {
+            background: rgba(30, 30, 30, 0.9);
+            color: #fff;
+            border-color: rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- 全局液态背景 -->
+    <div class="liquid-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- 顶部导航 (独立随机配色) -->
+    <nav id="nav-header" class="fixed top-0 left-0 right-0 z-50 p-3 sm:p-5 transition-all duration-500">
+        <div class="max-w-7xl mx-auto">
+            <div id="nav-panel" class="glass-panel rounded-panel p-6 flex flex-col gap-6" style="transition: background-color 0.5s ease;">
+                
+                <!-- 头部工具栏 -->
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-apple bg-indigo-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30">
+                            <i class="fa-solid fa-droplet"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold tracking-tight">Liquid Search</h1>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-[10px] font-bold uppercase tracking-wider opacity-60">Ultimate</span>
+                                <span class="text-xs opacity-50">V4.0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <!-- 随机配色按钮 -->
+                        <button onclick="applyRandomTheme()" class="w-14 h-14 rounded-full glass-input flex items-center justify-center hover:rotate-180 transition-transform duration-700 cursor-pointer shadow-sm group" title="换肤 (随机莫兰迪)">
+                            <i class="fa-solid fa-palette text-xl opacity-60 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                        <!-- 日夜模式按钮 (固定配色) -->
+                        <button onclick="toggleDarkMode()" class="w-14 h-14 rounded-full glass-input flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shadow-sm text-gray-700 dark:text-yellow-400" title="切换模式">
+                            <i class="fa-solid fa-moon dark:hidden"></i>
+                            <i class="fa-solid fa-sun hidden dark:block"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 搜索主区域 -->
+                <div class="flex flex-col lg:flex-row gap-4">
+                    <div class="relative flex-grow group">
+                        <input type="text" id="main-query" placeholder="输入搜索词，或点击下方分类自动生成..." 
+                            class="w-full h-16 pl-6 pr-16 rounded-apple glass-input text-xl font-mono placeholder-gray-400 dark:placeholder-gray-600">
+                        
+                        <button onclick="copyQuery()" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition" title="复制指令">
+                            <i class="fa-regular fa-copy text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex gap-3 shrink-0 h-16">
+                        <div class="relative h-full">
+                            <select id="engine-select" class="h-full pl-6 pr-12 rounded-apple glass-input text-base font-bold appearance-none cursor-pointer min-w-[150px]">
+                                <option value="google">Google</option>
+                                <option value="bing">Bing</option>
+                                <option value="duckduckgo">DuckDuckGo</option>
+                                <option value="yandex">Yandex</option>
+                                <option value="brave">Brave</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-xs opacity-50 pointer-events-none"></i>
+                        </div>
+
+                        <!-- 搜索按钮 (随机配色) -->
+                        <button id="search-btn" onclick="executeSearch()" class="h-full px-10 rounded-apple font-bold text-lg tracking-wide flex items-center gap-3 shadow-lg action-btn text-white">
+                            <span>搜索</span> <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 占位符 -->
+    <div class="h-[250px] lg:h-[230px]"></div>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-7xl mx-auto px-4 pb-20">
+        <div id="operator-container" class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <!-- 动态注入 -->
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-3 z-[100] pointer-events-none"></div>
+
+    <script>
+        // --- 1. 高级莫兰迪色谱 (36色) ---
+        const morandiPalette = [
+            '#7A8B84', '#8C9E9E', '#BFAFA6', '#969CBA', '#C7B8A1', '#948C75', 
+            '#838C87', '#D1C9C2', '#A6A29A', '#B6B0A5', '#9EA3AA', '#8C9184',
+            '#D6C6B9', '#E3DACE', '#BFB6B3', '#90949D', '#7D8A8B', '#A4B0BE',
+            '#8F7D76', '#766560', '#6D7973', '#82928D', '#9BAFA9', '#B5CCC6', 
+            '#738891', '#8FA6AC', '#ACBEC0', '#758a99', '#aebab0', '#b5a397',
+            '#6b705c', '#a5a58d', '#ffe8d6', '#ddbea9', '#cb997e', '#6c757d'
+        ];
+
+        // 辅助：获取随机颜色
+        function getRandomColor() {
+            return morandiPalette[Math.floor(Math.random() * morandiPalette.length)];
+        }
+
+        // 辅助：Hex 转 RGBA
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // --- 2. 84+ 运算符数据 ---
+        const operatorData = {
+            essentials: {
+                title: "核心常用 (Essentials)",
+                icon: "fa-star",
+                desc: "Google 搜索最强指令集",
+                open: true,
+                items: [
+                    { key: 'exact', label: '精确匹配', syntax: '"{val}"', placeholder: 'exact phrase', desc: '强制匹配' },
+                    { key: 'or', label: '逻辑或', syntax: 'OR', type: 'logic_or', placeholder: 'apple, android', desc: '任意其一' },
+                    { key: 'exclude', label: '排除词 (-)', syntax: '-{val}', placeholder: 'advertising', desc: '排除结果' },
+                    { key: 'site', label: '站内搜索', syntax: 'site:{val}', placeholder: 'zhihu.com', desc: '特定域名' },
+                    { key: 'filetype', label: '文件类型', syntax: 'filetype:{val}', placeholder: 'pdf', desc: '文件格式' },
+                    { key: 'intitle', label: '标题包含', syntax: 'intitle:{val}', placeholder: 'tutorial', desc: '标题含词' },
+                    { key: 'after', label: '时间之后', syntax: 'after:{val}', placeholder: '2023-01-01', desc: 'YYYY-MM-DD' },
+                    { key: 'before', label: '时间之前', syntax: 'before:{val}', placeholder: '2024-12-31', desc: 'YYYY-MM-DD' },
+                    { key: 'wildcard', label: '通配符 (*)', syntax: '*', type: 'wildcard', placeholder: 'how to * python', desc: '任意词' },
+                ]
+            },
+            logic: {
+                title: "逻辑与通用 (Logic)",
+                icon: "fa-network-wired",
+                desc: "布尔逻辑与模糊匹配",
+                open: false,
+                items: [
+                    { key: 'and', label: '逻辑与', syntax: 'AND', type: 'logic_and', placeholder: 'AI AND Ethics', desc: '同时包含' },
+                    { key: 'range', label: '数值范围', syntax: '{val}..{val2}', type: 'range', placeholder: ['2010', '2025'], desc: '价格/年份' },
+                    { key: 'single_quote', label: '原词搜索', syntax: "'{val}'", placeholder: 'colour', desc: '不纠错' },
+                    { key: 'around', label: '临近词', syntax: 'AROUND({val})', type: 'func_arg', placeholder: '3', desc: '距离不超过N' },
+                    { key: 'hashtag', label: '标签 (#)', syntax: '#{val}', placeholder: 'DeepLearning', desc: 'Tag' },
+                    { key: 'mention', label: '提及 (@)', syntax: '@{val}', placeholder: 'elonmusk', desc: 'User' },
+                    { key: 'all', label: '全词匹配', syntax: 'all:{val}', placeholder: 'keywords', desc: '匹配所有' },
+                    { key: 'plus', label: '强制 (+)', syntax: '+{val}', placeholder: 'blood', desc: '强制包含' },
+                ]
+            },
+            files: {
+                title: "文件与媒体 (Media)",
+                icon: "fa-photo-film",
+                desc: "文档、图片与代码",
+                open: false,
+                items: [
+                    { key: 'imagesize', label: '图片尺寸', syntax: 'imagesize:{val}', placeholder: '1920x1080', desc: '精确分辨率' },
+                    { key: 'ext', label: '扩展名', syntax: 'ext:{val}', placeholder: 'docx', desc: '同 filetype' },
+                    { key: 'source', label: '新闻来源', syntax: 'source:{val}', placeholder: 'Reuters', desc: '新闻源' },
+                    { key: 'filename', label: '文件名', syntax: 'filename:{val}', placeholder: 'report', desc: '文件名含词' },
+                    { key: 'package', label: '包名', syntax: 'package:{val}', placeholder: 'com.google.maps', desc: 'Play Store' },
+                    { key: 'mime', label: 'MIME类型', syntax: 'mime:{val}', placeholder: 'text/csv', desc: 'MIME' },
+                    { key: 'src', label: '图片来源', syntax: 'src:{val}', placeholder: 'example.com', desc: 'Image Src' },
+                ]
+            },
+            structure: {
+                title: "网站结构 (Structure)",
+                icon: "fa-sitemap",
+                desc: "URL与链接深度挖掘",
+                open: false,
+                items: [
+                    { key: 'related', label: '相似网站', syntax: 'related:{val}', placeholder: 'time.com', desc: 'Similar' },
+                    { key: 'inurl', label: 'URL包含', syntax: 'inurl:{val}', placeholder: 'login', desc: 'URL Keyword' },
+                    { key: 'allintitle', label: '标题全含', syntax: 'allintitle:{val}', placeholder: 'review 2024', desc: 'Title All' },
+                    { key: 'allinurl', label: 'URL全含', syntax: 'allinurl:{val}', placeholder: 'admin dashboard', desc: 'URL All' },
+                    { key: 'intext', label: '正文包含', syntax: 'intext:{val}', placeholder: 'crypto', desc: 'Body Text' },
+                    { key: 'allintext', label: '正文全含', syntax: 'allintext:{val}', placeholder: 'data analysis', desc: 'Body All' },
+                    { key: 'inanchor', label: '锚文本', syntax: 'inanchor:{val}', placeholder: 'click here', desc: 'Link Text' },
+                    { key: 'blogurl', label: '博客URL', syntax: 'blogurl:{val}', placeholder: 'wordpress', desc: 'Blog URL' },
+                    { key: 'link', label: '反向链接', syntax: 'link:{val}', placeholder: 'wikipedia.org', desc: 'Backlinks' },
+                    { key: 'info', label: '网站信息', syntax: 'info:{val}', placeholder: 'bbc.com', desc: 'Site Info' },
+                    { key: 'cache', label: '网页快照', syntax: 'cache:{val}', placeholder: 'cnn.com', desc: 'Cached' },
+                ]
+            },
+            geo_lang: {
+                title: "地理与时间 (Geo & Time)",
+                icon: "fa-earth-americas",
+                desc: "地区、语言与时区",
+                open: false,
+                items: [
+                    { key: 'location', label: '位置', syntax: 'location:{val}', placeholder: 'New York', desc: 'News Loc' },
+                    { key: 'lang', label: '语言', syntax: 'lang:{val}', placeholder: 'zh-CN', desc: 'Language' },
+                    { key: 'country', label: '国家', syntax: 'country:{val}', placeholder: 'US', desc: 'Country Code' },
+                    { key: 'region', label: '区域', syntax: 'region:{val}', placeholder: 'uk', desc: 'Region Code' },
+                    { key: 'timezone', label: '时区', syntax: 'timezone:{val}', placeholder: 'London', desc: 'Time' },
+                    { key: 'weather', label: '天气', syntax: 'weather:{val}', placeholder: 'Tokyo', desc: 'Weather' },
+                    { key: 'daterange', label: 'Julian日期', syntax: 'daterange:{val}-{val2}', type: 'range', placeholder: ['2459580', '2459945'], desc: 'Julian Date' },
+                    { key: 'when', label: '时段', syntax: 'when:{val}', placeholder: '1y', desc: 'Recent' },
+                    { key: 'map', label: '地图', syntax: 'map:{val}', placeholder: 'Paris', desc: 'Maps' },
+                ]
+            },
+            special: {
+                title: "垂直搜索 (Vertical)",
+                icon: "fa-rocket",
+                desc: "专利、股票与书籍",
+                open: false,
+                items: [
+                    { key: 'define', label: '定义', syntax: 'define:{val}', placeholder: 'osmosis', desc: 'Dictionary' },
+                    { key: 'movie', label: '电影', syntax: 'movie:{val}', placeholder: 'Inception', desc: 'Movie' },
+                    { key: 'stocks', label: '股票', syntax: 'stocks:{val}', placeholder: 'NVDA', desc: 'Stocks' },
+                    { key: 'patent', label: '专利', syntax: 'patent:{val}', placeholder: 'US1234567', desc: 'Patents' },
+                    { key: 'book', label: '书籍', syntax: 'book:{val}', placeholder: 'Three Body', desc: 'Books' },
+                    { key: 'music', label: '音乐', syntax: 'music:{val}', placeholder: 'Bach', desc: 'Music' },
+                    { key: 'flight', label: '航班', syntax: 'flight:{val}', placeholder: 'CA988', desc: 'Flights' },
+                    { key: 'apps', label: '应用', syntax: 'apps:{val}', placeholder: 'Notion', desc: 'Apps' },
+                ]
+            }
+        };
+
+        // --- 3. 随机配色逻辑 (Independent Randomization) ---
+        function applyRandomTheme() {
+            const root = document.documentElement;
+            
+            // 1. 全局背景 Blob (随机)
+            const c1 = getRandomColor();
+            const c2 = getRandomColor();
+            const c3 = getRandomColor();
+            root.style.setProperty('--bg-blob-1', c1);
+            root.style.setProperty('--bg-blob-2', c2);
+            root.style.setProperty('--bg-blob-3', c3);
+
+            // 2. 顶部导航 (独立随机 tint)
+            const navColor = getRandomColor();
+            // 在 JS 中动态设置导航的背景 tint
+            const navPanel = document.getElementById('nav-panel');
+            navPanel.style.backgroundColor = hexToRgba(navColor, 0.2); 
+            // 搜索按钮颜色
+            const btnColor = getRandomColor();
+            document.getElementById('search-btn').style.backgroundColor = btnColor;
+            
+            // 3. 重新渲染所有卡片的配色 (每个卡片独立随机)
+            const cards = document.querySelectorAll('.category-card');
+            cards.forEach(card => {
+                const cardColor = getRandomColor();
+                // 设置每个卡片特有的 CSS 变量或直接样式
+                // 这里我们给卡片头部和背景一个微弱的 tint
+                const header = card.querySelector('.card-header');
+                const body = card.querySelector('.card-body');
+                
+                // 记录随机色以便 hover 效果
+                card.dataset.tint = cardColor;
+                header.style.backgroundColor = hexToRgba(cardColor, 0.15);
+                body.style.backgroundColor = hexToRgba(cardColor, 0.05);
+            });
+        }
+
+        // --- 4. 渲染核心 (Render) ---
+        function renderApp() {
+            const container = document.getElementById('operator-container');
+            container.innerHTML = '';
+
+            Object.entries(operatorData).forEach(([catKey, catData]) => {
+                // 每个卡片分配一个独立随机色 (初始渲染)
+                const cardTint = getRandomColor();
+
+                const section = document.createElement('div');
+                section.className = 'glass-panel rounded-panel overflow-hidden transition-all duration-300 category-card group';
+                section.dataset.open = catData.open; // 标记状态
+
+                // --- 头部 ---
+                const header = document.createElement('div');
+                header.className = 'card-header p-6 flex items-center justify-between cursor-pointer select-none transition-colors duration-300';
+                // 初始背景色
+                header.style.backgroundColor = hexToRgba(cardTint, 0.15);
+
+                header.innerHTML = `
+                    <div class="flex items-center gap-5">
+                        <div class="w-12 h-12 rounded-apple flex items-center justify-center text-xl shadow-sm text-white transition-colors duration-300" style="background-color: ${cardTint}">
+                            <i class="fa-solid ${catData.icon}"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-xl">${catData.title}</div>
+                            <div class="text-xs opacity-60 mt-1 font-medium tracking-wide">${catData.desc}</div>
+                        </div>
+                    </div>
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black/5 dark:bg-white/10 transition-transform duration-300 ${catData.open ? 'rotate-180' : ''}">
+                        <i class="fa-solid fa-chevron-down opacity-60"></i>
+                    </div>
+                `;
+
+                // --- 主体容器 ---
+                const bodyContainer = document.createElement('div');
+                bodyContainer.className = 'card-body relative transition-all duration-500 ease-in-out';
+                bodyContainer.style.backgroundColor = hexToRgba(cardTint, 0.05);
+                
+                // 根据状态设置初始高度
+                if (catData.open) {
+                    bodyContainer.style.maxHeight = '5000px';
+                    bodyContainer.style.opacity = '1';
+                } else {
+                    bodyContainer.style.maxHeight = '0px';
+                    bodyContainer.style.opacity = '0';
+                    bodyContainer.classList.add('overflow-hidden');
+                }
+
+                // --- 右侧收起条 (Side Strip - 20px) ---
+                // 仅在展开时有用，点击收起
+                const sideStrip = document.createElement('div');
+                sideStrip.className = 'side-strip';
+                sideStrip.title = "点击收起";
+                sideStrip.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleSection(section, header, bodyContainer, false);
+                };
+
+                // --- 内容列表 ---
+                const contentList = document.createElement('div');
+                contentList.className = 'p-6 pt-0 grid gap-4';
+                
+                catData.items.forEach(item => {
+                    const row = createInputRow(item);
+                    contentList.appendChild(row);
+                });
+
+                // --- 底部收起按钮 (Bottom Collapse) ---
+                const bottomBtn = document.createElement('div');
+                bottomBtn.className = 'bottom-collapse-btn h-14 flex items-center justify-center gap-2 mt-4';
+                bottomBtn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> <span>点击收起</span>';
+                bottomBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleSection(section, header, bodyContainer, false);
+                };
+
+                bodyContainer.appendChild(sideStrip); // 侧边条放里面
+                bodyContainer.appendChild(contentList);
+                bodyContainer.appendChild(bottomBtn);
+
+                // 头部点击事件
+                header.onclick = () => {
+                    const isOpen = bodyContainer.style.maxHeight !== '0px' && !bodyContainer.classList.contains('overflow-hidden');
+                    toggleSection(section, header, bodyContainer, !isOpen);
+                };
+
+                section.appendChild(header);
+                section.appendChild(bodyContainer);
+                container.appendChild(section);
+            });
+        }
+
+        // --- 5. 展开/收起 逻辑 ---
+        function toggleSection(section, header, body, shouldOpen) {
+            const iconWrapper = header.querySelector('.rotate-180') || header.querySelector('.fa-chevron-down').parentElement;
+            
+            if (shouldOpen) {
+                body.classList.remove('overflow-hidden');
+                body.style.maxHeight = '5000px';
+                body.style.opacity = '1';
+                iconWrapper.classList.add('rotate-180');
+            } else {
+                body.style.maxHeight = '0px';
+                body.style.opacity = '0';
+                iconWrapper.classList.remove('rotate-180');
+                setTimeout(() => body.classList.add('overflow-hidden'), 500);
+            }
+        }
+
+        // --- 6. 行创建逻辑 (输入框) ---
+        function createInputRow(item) {
+            const row = document.createElement('div');
+            row.className = 'flex flex-col sm:flex-row gap-3 p-4 rounded-apple bg-white/40 dark:bg-black/20 hover:bg-white/60 dark:hover:bg-black/30 transition-colors duration-200 animate-slide-down group/row border border-white/30 dark:border-white/5 relative z-10';
+            row.dataset.syntax = item.syntax;
+            row.dataset.type = item.type || 'standard';
+
+            // Label
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'sm:w-32 flex-shrink-0 flex flex-col justify-center';
+            labelDiv.innerHTML = `
+                <span class="font-bold text-sm select-none">${item.label}</span>
+                <span class="text-[10px] font-mono opacity-40 mt-0.5 select-none">${item.syntax.split(':')[0]}</span>
+            `;
+
+            // Input Area
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'flex-grow flex items-center gap-2';
+
+            if (item.type === 'range' || item.type === 'daterange') {
+                inputContainer.innerHTML = `
+                    <input type="text" class="w-full h-12 px-4 rounded-apple glass-input text-sm font-mono" placeholder="Start" oninput="rebuildQuery()">
+                    <span class="opacity-30 font-bold">~</span>
+                    <input type="text" class="w-full h-12 px-4 rounded-apple glass-input text-sm font-mono" placeholder="End" oninput="rebuildQuery()">
+                `;
+            } else if (item.type === 'func_arg' && item.key === 'around') {
+                 inputContainer.innerHTML = `
+                     <input type="number" class="w-24 h-12 px-4 rounded-apple glass-input text-sm font-mono" placeholder="N" oninput="rebuildQuery()">
+                `;
+            } else {
+                inputContainer.innerHTML = `
+                    <input type="text" class="w-full h-12 px-4 rounded-apple glass-input text-sm font-mono" placeholder="${item.placeholder}" oninput="rebuildQuery()">
+                `;
+            }
+
+            // Actions (+ / x)
+            const actions = document.createElement('div');
+            actions.className = 'flex items-center gap-1 opacity-60 group-hover/row:opacity-100 transition-opacity';
+
+            // 加大号按钮
+            const btnClass = "w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200";
+            
+            const addBtn = document.createElement('button');
+            addBtn.className = `${btnClass} hover:bg-green-500 hover:text-white text-green-600/70`;
+            addBtn.innerHTML = '<i class="fa-solid fa-plus text-sm"></i>';
+            addBtn.onclick = () => {
+                const newRow = createInputRow(item);
+                row.parentNode.insertBefore(newRow, row.nextSibling);
+                setTimeout(() => { 
+                    const inp = newRow.querySelector('input');
+                    if(inp) inp.focus();
+                }, 50);
+            };
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = `${btnClass} hover:bg-red-500 hover:text-white text-red-500/60`;
+            removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-sm"></i>';
+            removeBtn.onclick = () => {
+                const siblings = row.parentNode.querySelectorAll(`[data-syntax="${item.syntax}"]`);
+                if(siblings.length > 1) {
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateY(-10px)';
+                    setTimeout(() => { row.remove(); rebuildQuery(); }, 250);
+                } else {
+                    row.querySelectorAll('input').forEach(i => i.value = '');
+                    rebuildQuery();
+                }
+            };
+
+            actions.appendChild(addBtn);
+            actions.appendChild(removeBtn);
+
+            row.appendChild(labelDiv);
+            row.appendChild(inputContainer);
+            row.appendChild(actions);
+
+            return row;
+        }
+
+        // --- 7. 核心逻辑 (Query Builder) ---
+        function rebuildQuery() {
+            // 从DOM中读取所有输入值
+            const allRows = document.querySelectorAll('#operator-container [data-syntax]');
+            let parts = [];
+
+            allRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const v1 = inputs[0]?.value.trim();
+                const v2 = inputs[1]?.value.trim();
+                const syntax = row.dataset.syntax;
+                const type = row.dataset.type;
+
+                if (!v1) return;
+
+                let res = '';
+                if (type === 'range' || type === 'daterange') {
+                    if (v2) res = syntax.replace('{val}', v1).replace('{val2}', v2);
+                    else res = `${v1}..`;
+                } else if (type === 'logic_or') {
+                    const terms = v1.split(/[,，]/).map(t => t.trim()).filter(t => t);
+                    if (terms.length > 1) res = `(${terms.join(' OR ')})`;
+                    else res = terms[0];
+                } else {
+                    res = syntax.replace('{val}', v1);
+                }
+                if(res) parts.push(res);
+            });
+
+            document.getElementById('main-query').value = parts.join(' ');
+        }
+
+        // --- 8. 搜索与工具 ---
+        function executeSearch() {
+            const query = document.getElementById('main-query').value.trim();
+            if (!query) {
+                showToast("⚠️ 内容为空");
+                return;
+            }
+            const engine = document.getElementById('engine-select').value;
+            let url = '';
+            switch(engine) {
+                case 'google': url = `https://www.google.com/search?q=${encodeURIComponent(query)}`; break;
+                case 'bing': url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`; break;
+                case 'duckduckgo': url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`; break;
+                case 'yandex': url = `https://yandex.com/search/?text=${encodeURIComponent(query)}`; break;
+                case 'brave': url = `https://search.brave.com/search?q=${encodeURIComponent(query)}`; break;
+            }
+            window.open(url, '_blank');
+        }
+
+        function copyQuery() {
+            const input = document.getElementById('main-query');
+            if(!input.value) return;
+            if(navigator.clipboard) {
+                navigator.clipboard.writeText(input.value).then(() => showToast("✨ 已复制"));
+            } else {
+                input.select(); document.execCommand('copy'); showToast("✨ 已复制");
+            }
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast animate-pop';
+            el.innerText = msg;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(10px)';
+                setTimeout(() => el.remove(), 300);
+            }, 2000);
+        }
+
+        // --- 初始化 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            applyRandomTheme();
+            renderApp();
+            
+            // Enter key
+            document.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter' && document.activeElement.tagName === 'INPUT') executeSearch();
+            });
+        });
+
+    </script>
+</body>
+</html>
+
+
