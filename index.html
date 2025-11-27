@@ -24,6 +24,7 @@
                         'float': 'float 20s ease-in-out infinite',
                         'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                         'slide-down': 'slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'liquid-shimmer': 'shimmer 8s linear infinite',
                     },
                     keyframes: {
                         float: {
@@ -38,6 +39,10 @@
                         slideDown: {
                             '0%': { transform: 'translateY(-10px)', opacity: '0' },
                             '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '0% 50%' },
+                            '100%': { backgroundPosition: '200% 50%' },
                         }
                     },
                     borderRadius: {
@@ -77,7 +82,6 @@
         body {
             background-color: #F3F4F6;
             color: var(--text-primary);
-            /* 关键：平滑过渡，避免日夜切换闪烁 */
             transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
             overflow-x: hidden;
         }
@@ -95,13 +99,12 @@
         .blob {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px); /* 强模糊 */
+            filter: blur(80px);
             opacity: 0.8;
             animation: float 25s infinite alternate;
             transition: background-color 1s ease, opacity 0.5s ease;
         }
         
-        /* 混合模式让颜色融合 */
         html:not(.dark) .blob { mix-blend-mode: multiply; }
         html.dark .blob { mix-blend-mode: hard-light; opacity: 0.3; }
 
@@ -112,7 +115,7 @@
         /* --- 液态玻璃面板 --- */
         .glass-panel {
             background: var(--glass-surface);
-            backdrop-filter: blur(50px) saturate(160%); /* 苹果级毛玻璃 */
+            backdrop-filter: blur(50px) saturate(160%);
             -webkit-backdrop-filter: blur(50px) saturate(160%);
             border: 1px solid var(--glass-border);
             box-shadow: 
@@ -123,7 +126,30 @@
             overflow: hidden;
         }
 
-        /* 悬停微动 */
+        /* 增强的内部液态效果 (仿 liquid-glass-react) */
+        .card-body {
+            position: relative;
+        }
+        /* 添加流动的光泽层 */
+        .card-body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                120deg, 
+                transparent 0%, 
+                rgba(255,255,255,0.1) 30%, 
+                rgba(255,255,255,0.0) 50%, 
+                rgba(255,255,255,0.1) 70%, 
+                transparent 100%
+            );
+            background-size: 200% 200%;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+            animation: shimmer 15s linear infinite;
+        }
+
         .glass-panel:hover {
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
             transform: translateY(-2px);
@@ -160,7 +186,6 @@
             overflow: hidden;
         }
         .action-btn:active { transform: scale(0.96); }
-        /* 按钮光泽动画 */
         .action-btn::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(255,255,255,0.2), transparent);
@@ -168,31 +193,32 @@
         }
         .action-btn:hover::after { opacity: 1; }
 
-        /* --- 布局微调 --- */
-        /* 右侧收起条 (Side Strip) */
+        /* --- 侧边收起条 (Side Strip) --- */
         .side-strip {
             position: absolute;
-            right: 0;
             top: 0;
             bottom: 0;
-            width: 20px; /* 用户要求的 15-23px */
+            width: 20px;
             cursor: pointer;
             z-index: 20;
             transition: background-color 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0; /* 默认隐藏 */
+            opacity: 0;
         }
         .side-strip:hover {
             background-color: rgba(0,0,0,0.05);
             opacity: 1;
         }
         html.dark .side-strip:hover { background-color: rgba(255,255,255,0.1); }
-        /* 竖条内的图标装饰 */
         .side-strip::before {
             content: ''; height: 20px; width: 4px; border-radius: 2px; background: currentColor; opacity: 0.3;
         }
+        /* Right Strip */
+        .side-strip-right { right: 0; }
+        /* Left Strip */
+        .side-strip-left { left: 0; }
 
         /* 底部收起按钮 */
         .bottom-collapse-btn {
@@ -215,10 +241,28 @@
         }
         html.dark .bottom-collapse-btn:hover { background: rgba(255,255,255,0.08); }
 
-        /* 图标盒子 */
-        .icon-box {
-            /* 黑夜模式下保持高对比度 */
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+        /* 便捷按钮 (Chip) */
+        .input-chip {
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 6px;
+            background: rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+        }
+        .input-chip:hover {
+            background: rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        html.dark .input-chip {
+            background: rgba(255,255,255,0.1);
+            color: #ccc;
+        }
+        html.dark .input-chip:hover {
+            background: rgba(255,255,255,0.2);
         }
 
         /* 滚动条 */
@@ -251,65 +295,69 @@
         <div class="blob blob-3"></div>
     </div>
 
-    <!-- 顶部导航 (独立随机配色) -->
-    <nav id="nav-header" class="fixed top-0 left-0 right-0 z-50 p-3 sm:p-5 transition-all duration-500">
+    <!-- 顶部导航 (压缩版) -->
+    <!-- 调整 padding 减少高度 -->
+    <nav id="nav-header" class="fixed top-0 left-0 right-0 z-50 p-2 sm:p-3 transition-all duration-500">
         <div class="max-w-7xl mx-auto">
-            <div id="nav-panel" class="glass-panel rounded-panel p-6 flex flex-col gap-6" style="transition: background-color 0.5s ease;">
+            <!-- 减少内部 padding (p-3) 和 gap (gap-2) -->
+            <div id="nav-panel" class="glass-panel rounded-panel p-3 flex flex-col gap-2" style="transition: background-color 0.5s ease;">
                 
-                <!-- 头部工具栏 -->
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 rounded-apple bg-indigo-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30">
+                <!-- 头部工具栏：高度压缩，图标缩小 -->
+                <div class="flex justify-between items-center px-1">
+                    <div class="flex items-center gap-3">
+                        <!-- Icon 缩小 w-10 h-10 -->
+                        <div class="w-9 h-9 rounded-apple bg-indigo-500 text-white flex items-center justify-center text-lg shadow-lg shadow-indigo-500/30">
                             <i class="fa-solid fa-droplet"></i>
                         </div>
-                        <div>
-                            <h1 class="text-2xl font-bold tracking-tight">Liquid Search</h1>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <span class="px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-[10px] font-bold uppercase tracking-wider opacity-60">Ultimate</span>
-                                <span class="text-xs opacity-50">V4.0</span>
+                        <div class="flex items-baseline gap-2">
+                            <!-- 字体缩小 -->
+                            <h1 class="text-lg font-bold tracking-tight">Liquid Search</h1>
+                            <div class="flex items-center gap-2">
+                                <span class="px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-[9px] font-bold uppercase tracking-wider opacity-60">Ult.</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="flex gap-3">
-                        <!-- 随机配色按钮 -->
-                        <button onclick="applyRandomTheme()" class="w-14 h-14 rounded-full glass-input flex items-center justify-center hover:rotate-180 transition-transform duration-700 cursor-pointer shadow-sm group" title="换肤 (随机莫兰迪)">
-                            <i class="fa-solid fa-palette text-xl opacity-60 group-hover:opacity-100 transition-opacity"></i>
+                    <div class="flex gap-2">
+                        <!-- 按钮缩小 -->
+                        <button onclick="applyRandomTheme()" class="w-9 h-9 rounded-full glass-input flex items-center justify-center hover:rotate-180 transition-transform duration-700 cursor-pointer shadow-sm group" title="换肤 (随机莫兰迪)">
+                            <i class="fa-solid fa-palette text-sm opacity-60 group-hover:opacity-100 transition-opacity"></i>
                         </button>
-                        <!-- 日夜模式按钮 (固定配色) -->
-                        <button onclick="toggleDarkMode()" class="w-14 h-14 rounded-full glass-input flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shadow-sm text-gray-700 dark:text-yellow-400" title="切换模式">
-                            <i class="fa-solid fa-moon dark:hidden"></i>
-                            <i class="fa-solid fa-sun hidden dark:block"></i>
+                        <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-full glass-input flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shadow-sm text-gray-700 dark:text-yellow-400" title="切换模式">
+                            <i class="fa-solid fa-moon text-sm dark:hidden"></i>
+                            <i class="fa-solid fa-sun text-sm hidden dark:block"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- 搜索主区域 -->
-                <div class="flex flex-col lg:flex-row gap-4">
+                <div class="flex flex-col lg:flex-row gap-2">
                     <div class="relative flex-grow group">
+                        <!-- 高度减小 h-12 -->
                         <input type="text" id="main-query" placeholder="输入搜索词，或点击下方分类自动生成..." 
-                            class="w-full h-16 pl-6 pr-16 rounded-apple glass-input text-xl font-mono placeholder-gray-400 dark:placeholder-gray-600">
+                            class="w-full h-12 pl-5 pr-12 rounded-apple glass-input text-lg font-mono placeholder-gray-400 dark:placeholder-gray-600">
                         
-                        <button onclick="copyQuery()" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition" title="复制指令">
-                            <i class="fa-regular fa-copy text-lg"></i>
+                        <button onclick="copyQuery()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition" title="复制指令">
+                            <i class="fa-regular fa-copy text-base"></i>
                         </button>
                     </div>
                     
-                    <div class="flex gap-3 shrink-0 h-16">
+                    <div class="flex gap-2 shrink-0 h-12">
                         <div class="relative h-full">
-                            <select id="engine-select" class="h-full pl-6 pr-12 rounded-apple glass-input text-base font-bold appearance-none cursor-pointer min-w-[150px]">
+                            <select id="engine-select" class="h-full pl-5 pr-10 rounded-apple glass-input text-sm font-bold appearance-none cursor-pointer min-w-[120px]">
                                 <option value="google">Google</option>
                                 <option value="bing">Bing</option>
+                                <option value="metaso">秘塔 (Metaso)</option>
                                 <option value="duckduckgo">DuckDuckGo</option>
                                 <option value="yandex">Yandex</option>
                                 <option value="brave">Brave</option>
                             </select>
-                            <i class="fa-solid fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-xs opacity-50 pointer-events-none"></i>
+                            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] opacity-50 pointer-events-none"></i>
                         </div>
 
-                        <!-- 搜索按钮 (随机配色) -->
-                        <button id="search-btn" onclick="executeSearch()" class="h-full px-10 rounded-apple font-bold text-lg tracking-wide flex items-center gap-3 shadow-lg action-btn text-white">
-                            <span>搜索</span> <i class="fa-solid fa-arrow-right"></i>
+                        <!-- 搜索按钮 -->
+                        <button id="search-btn" onclick="executeSearch()" class="h-full px-8 rounded-apple font-bold text-base tracking-wide flex items-center gap-2 shadow-lg action-btn text-white">
+                            <span>搜索</span> <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
                     </div>
                 </div>
@@ -317,12 +365,13 @@
         </div>
     </nav>
 
-    <!-- 占位符 -->
-    <div class="h-[250px] lg:h-[230px]"></div>
+    <!-- 占位符 (调整高度以匹配压缩后的导航栏) -->
+    <!-- nav roughly: p-2(8px)*2 + gap-2(8px) + row1(36px) + row2(48px) + p-3 inside(12px)*2 = ~132px. Previous was ~230px+ -->
+    <div class="h-[140px]"></div>
 
     <!-- 主要内容区域 -->
     <main class="max-w-7xl mx-auto px-4 pb-20">
-        <div id="operator-container" class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div id="operator-container" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <!-- 动态注入 -->
         </div>
     </main>
@@ -341,12 +390,10 @@
             '#6b705c', '#a5a58d', '#ffe8d6', '#ddbea9', '#cb997e', '#6c757d'
         ];
 
-        // 辅助：获取随机颜色
         function getRandomColor() {
             return morandiPalette[Math.floor(Math.random() * morandiPalette.length)];
         }
 
-        // 辅助：Hex 转 RGBA
         function hexToRgba(hex, alpha) {
             const r = parseInt(hex.slice(1, 3), 16);
             const g = parseInt(hex.slice(3, 5), 16);
@@ -354,7 +401,7 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        // --- 2. 84+ 运算符数据 ---
+        // --- 2. 运算符数据 (Wildcard 修改) ---
         const operatorData = {
             essentials: {
                 title: "核心常用 (Essentials)",
@@ -365,12 +412,13 @@
                     { key: 'exact', label: '精确匹配', syntax: '"{val}"', placeholder: 'exact phrase', desc: '强制匹配' },
                     { key: 'or', label: '逻辑或', syntax: 'OR', type: 'logic_or', placeholder: 'apple, android', desc: '任意其一' },
                     { key: 'exclude', label: '排除词 (-)', syntax: '-{val}', placeholder: 'advertising', desc: '排除结果' },
-                    { key: 'site', label: '站内搜索', syntax: 'site:{val}', placeholder: 'zhihu.com', desc: '特定域名' },
+                    { key: 'site', label: '站内搜索', syntax: 'site:{val}', placeholder: 'zhihu.com', desc: '特定域名', hasChips: true }, // 标记拥有便捷按钮
                     { key: 'filetype', label: '文件类型', syntax: 'filetype:{val}', placeholder: 'pdf', desc: '文件格式' },
                     { key: 'intitle', label: '标题包含', syntax: 'intitle:{val}', placeholder: 'tutorial', desc: '标题含词' },
                     { key: 'after', label: '时间之后', syntax: 'after:{val}', placeholder: '2023-01-01', desc: 'YYYY-MM-DD' },
                     { key: 'before', label: '时间之前', syntax: 'before:{val}', placeholder: '2024-12-31', desc: 'YYYY-MM-DD' },
-                    { key: 'wildcard', label: '通配符 (*)', syntax: '*', type: 'wildcard', placeholder: 'how to * python', desc: '任意词' },
+                    // Wildcard 修复: 变更为 *{val}* 形式
+                    { key: 'wildcard', label: '通配符 (*)', syntax: '*{val}*', type: 'wildcard', placeholder: 'ABC', desc: '任意字符' },
                 ]
             },
             logic: {
@@ -458,11 +506,10 @@
             }
         };
 
-        // --- 3. 随机配色逻辑 (Independent Randomization) ---
+        // --- 3. 随机配色逻辑 ---
         function applyRandomTheme() {
             const root = document.documentElement;
             
-            // 1. 全局背景 Blob (随机)
             const c1 = getRandomColor();
             const c2 = getRandomColor();
             const c3 = getRandomColor();
@@ -470,71 +517,63 @@
             root.style.setProperty('--bg-blob-2', c2);
             root.style.setProperty('--bg-blob-3', c3);
 
-            // 2. 顶部导航 (独立随机 tint)
             const navColor = getRandomColor();
-            // 在 JS 中动态设置导航的背景 tint
             const navPanel = document.getElementById('nav-panel');
             navPanel.style.backgroundColor = hexToRgba(navColor, 0.2); 
-            // 搜索按钮颜色
+            
             const btnColor = getRandomColor();
             document.getElementById('search-btn').style.backgroundColor = btnColor;
             
-            // 3. 重新渲染所有卡片的配色 (每个卡片独立随机)
             const cards = document.querySelectorAll('.category-card');
             cards.forEach(card => {
                 const cardColor = getRandomColor();
-                // 设置每个卡片特有的 CSS 变量或直接样式
-                // 这里我们给卡片头部和背景一个微弱的 tint
                 const header = card.querySelector('.card-header');
                 const body = card.querySelector('.card-body');
                 
-                // 记录随机色以便 hover 效果
                 card.dataset.tint = cardColor;
                 header.style.backgroundColor = hexToRgba(cardColor, 0.15);
-                body.style.backgroundColor = hexToRgba(cardColor, 0.05);
+                // 增加 body 浓度以突显 glass effect
+                body.style.backgroundColor = hexToRgba(cardColor, 0.08);
             });
         }
 
-        // --- 4. 渲染核心 (Render) ---
+        // --- 4. 渲染核心 ---
         function renderApp() {
             const container = document.getElementById('operator-container');
             container.innerHTML = '';
 
             Object.entries(operatorData).forEach(([catKey, catData]) => {
-                // 每个卡片分配一个独立随机色 (初始渲染)
                 const cardTint = getRandomColor();
 
                 const section = document.createElement('div');
                 section.className = 'glass-panel rounded-panel overflow-hidden transition-all duration-300 category-card group';
-                section.dataset.open = catData.open; // 标记状态
+                section.dataset.open = catData.open;
 
                 // --- 头部 ---
                 const header = document.createElement('div');
-                header.className = 'card-header p-6 flex items-center justify-between cursor-pointer select-none transition-colors duration-300';
-                // 初始背景色
+                header.className = 'card-header p-5 flex items-center justify-between cursor-pointer select-none transition-colors duration-300';
                 header.style.backgroundColor = hexToRgba(cardTint, 0.15);
 
                 header.innerHTML = `
-                    <div class="flex items-center gap-5">
-                        <div class="w-12 h-12 rounded-apple flex items-center justify-center text-xl shadow-sm text-white transition-colors duration-300" style="background-color: ${cardTint}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-apple flex items-center justify-center text-lg shadow-sm text-white transition-colors duration-300" style="background-color: ${cardTint}">
                             <i class="fa-solid ${catData.icon}"></i>
                         </div>
                         <div>
-                            <div class="font-bold text-xl">${catData.title}</div>
-                            <div class="text-xs opacity-60 mt-1 font-medium tracking-wide">${catData.desc}</div>
+                            <div class="font-bold text-lg">${catData.title}</div>
+                            <div class="text-xs opacity-60 mt-0.5 font-medium tracking-wide">${catData.desc}</div>
                         </div>
                     </div>
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-black/5 dark:bg-white/10 transition-transform duration-300 ${catData.open ? 'rotate-180' : ''}">
-                        <i class="fa-solid fa-chevron-down opacity-60"></i>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-black/5 dark:bg-white/10 transition-transform duration-300 ${catData.open ? 'rotate-180' : ''}">
+                        <i class="fa-solid fa-chevron-down opacity-60 text-xs"></i>
                     </div>
                 `;
 
                 // --- 主体容器 ---
                 const bodyContainer = document.createElement('div');
                 bodyContainer.className = 'card-body relative transition-all duration-500 ease-in-out';
-                bodyContainer.style.backgroundColor = hexToRgba(cardTint, 0.05);
+                bodyContainer.style.backgroundColor = hexToRgba(cardTint, 0.08);
                 
-                // 根据状态设置初始高度
                 if (catData.open) {
                     bodyContainer.style.maxHeight = '5000px';
                     bodyContainer.style.opacity = '1';
@@ -544,39 +583,47 @@
                     bodyContainer.classList.add('overflow-hidden');
                 }
 
-                // --- 右侧收起条 (Side Strip - 20px) ---
-                // 仅在展开时有用，点击收起
-                const sideStrip = document.createElement('div');
-                sideStrip.className = 'side-strip';
-                sideStrip.title = "点击收起";
-                sideStrip.onclick = (e) => {
+                // --- 右侧收起条 (Side Strip Right) ---
+                const rightStrip = document.createElement('div');
+                rightStrip.className = 'side-strip side-strip-right';
+                rightStrip.title = "点击收起";
+                rightStrip.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleSection(section, header, bodyContainer, false);
+                };
+
+                // --- 左侧收起条 (Side Strip Left - Newly Added) ---
+                const leftStrip = document.createElement('div');
+                leftStrip.className = 'side-strip side-strip-left';
+                leftStrip.title = "点击收起";
+                leftStrip.onclick = (e) => {
                     e.stopPropagation();
                     toggleSection(section, header, bodyContainer, false);
                 };
 
                 // --- 内容列表 ---
                 const contentList = document.createElement('div');
-                contentList.className = 'p-6 pt-0 grid gap-4';
+                contentList.className = 'p-5 pt-2 grid gap-3 pl-8 pr-8'; // 增加左右 padding 给侧条留空
                 
                 catData.items.forEach(item => {
                     const row = createInputRow(item);
                     contentList.appendChild(row);
                 });
 
-                // --- 底部收起按钮 (Bottom Collapse) ---
+                // --- 底部收起按钮 ---
                 const bottomBtn = document.createElement('div');
-                bottomBtn.className = 'bottom-collapse-btn h-14 flex items-center justify-center gap-2 mt-4';
+                bottomBtn.className = 'bottom-collapse-btn h-12 flex items-center justify-center gap-2 mt-2';
                 bottomBtn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> <span>点击收起</span>';
                 bottomBtn.onclick = (e) => {
                     e.stopPropagation();
                     toggleSection(section, header, bodyContainer, false);
                 };
 
-                bodyContainer.appendChild(sideStrip); // 侧边条放里面
+                bodyContainer.appendChild(leftStrip); // Left
+                bodyContainer.appendChild(rightStrip); // Right
                 bodyContainer.appendChild(contentList);
                 bodyContainer.appendChild(bottomBtn);
 
-                // 头部点击事件
                 header.onclick = () => {
                     const isOpen = bodyContainer.style.maxHeight !== '0px' && !bodyContainer.classList.contains('overflow-hidden');
                     toggleSection(section, header, bodyContainer, !isOpen);
@@ -588,7 +635,6 @@
             });
         }
 
-        // --- 5. 展开/收起 逻辑 ---
         function toggleSection(section, header, body, shouldOpen) {
             const iconWrapper = header.querySelector('.rotate-180') || header.querySelector('.fa-chevron-down').parentElement;
             
@@ -605,16 +651,16 @@
             }
         }
 
-        // --- 6. 行创建逻辑 (输入框) ---
+        // --- 6. 行创建逻辑 ---
         function createInputRow(item) {
             const row = document.createElement('div');
-            row.className = 'flex flex-col sm:flex-row gap-3 p-4 rounded-apple bg-white/40 dark:bg-black/20 hover:bg-white/60 dark:hover:bg-black/30 transition-colors duration-200 animate-slide-down group/row border border-white/30 dark:border-white/5 relative z-10';
+            row.className = 'flex flex-col sm:flex-row gap-2 p-3 rounded-apple bg-white/40 dark:bg-black/20 hover:bg-white/60 dark:hover:bg-black/30 transition-colors duration-200 animate-slide-down group/row border border-white/30 dark:border-white/5 relative z-10';
             row.dataset.syntax = item.syntax;
             row.dataset.type = item.type || 'standard';
 
             // Label
             const labelDiv = document.createElement('div');
-            labelDiv.className = 'sm:w-32 flex-shrink-0 flex flex-col justify-center';
+            labelDiv.className = 'sm:w-28 flex-shrink-0 flex flex-col justify-center';
             labelDiv.innerHTML = `
                 <span class="font-bold text-sm select-none">${item.label}</span>
                 <span class="text-[10px] font-mono opacity-40 mt-0.5 select-none">${item.syntax.split(':')[0]}</span>
@@ -622,34 +668,56 @@
 
             // Input Area
             const inputContainer = document.createElement('div');
-            inputContainer.className = 'flex-grow flex items-center gap-2';
+            inputContainer.className = 'flex-grow flex items-center gap-2 flex-wrap';
 
             if (item.type === 'range' || item.type === 'daterange') {
                 inputContainer.innerHTML = `
-                    <input type="text" class="w-full h-12 px-4 rounded-apple glass-input text-sm font-mono" placeholder="Start" oninput="rebuildQuery()">
+                    <input type="text" class="flex-1 h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="Start" oninput="rebuildQuery()">
                     <span class="opacity-30 font-bold">~</span>
-                    <input type="text" class="w-full h-12 px-4 rounded-apple glass-input text-sm font-mono" placeholder="End" oninput="rebuildQuery()">
+                    <input type="text" class="flex-1 h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="End" oninput="rebuildQuery()">
                 `;
             } else if (item.type === 'func_arg' && item.key === 'around') {
                  inputContainer.innerHTML = `
-                     <input type="number" class="w-24 h-12 px-4 rounded-apple glass-input text-sm font-mono" placeholder="N" oninput="rebuildQuery()">
+                     <input type="number" class="w-20 h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="N" oninput="rebuildQuery()">
                 `;
             } else {
+                // 标准输入框
+                const inputId = `input-${Math.random().toString(36).substr(2, 9)}`;
                 inputContainer.innerHTML = `
-                    <input type="text" class="w-full h-12 px-4 rounded-apple glass-input text-sm font-mono" placeholder="${item.placeholder}" oninput="rebuildQuery()">
+                    <input type="text" id="${inputId}" class="w-full h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="${item.placeholder}" oninput="rebuildQuery()">
                 `;
+                
+                // --- 站内搜索便捷按钮 (Chips) ---
+                if (item.hasChips) {
+                    const chipContainer = document.createElement('div');
+                    chipContainer.className = "flex gap-1 ml-1";
+                    
+                    ['.', '.com', '.org'].forEach(suffix => {
+                        const chip = document.createElement('button');
+                        chip.className = 'input-chip';
+                        chip.innerText = suffix;
+                        chip.onclick = (e) => {
+                            e.preventDefault();
+                            const inp = document.getElementById(inputId);
+                            inp.value += suffix;
+                            inp.focus();
+                            rebuildQuery();
+                        };
+                        chipContainer.appendChild(chip);
+                    });
+                    inputContainer.appendChild(chipContainer);
+                }
             }
 
             // Actions (+ / x)
             const actions = document.createElement('div');
-            actions.className = 'flex items-center gap-1 opacity-60 group-hover/row:opacity-100 transition-opacity';
+            actions.className = 'flex items-center gap-1 opacity-60 group-hover/row:opacity-100 transition-opacity ml-auto sm:ml-0';
 
-            // 加大号按钮
-            const btnClass = "w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200";
+            const btnClass = "w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200";
             
             const addBtn = document.createElement('button');
             addBtn.className = `${btnClass} hover:bg-green-500 hover:text-white text-green-600/70`;
-            addBtn.innerHTML = '<i class="fa-solid fa-plus text-sm"></i>';
+            addBtn.innerHTML = '<i class="fa-solid fa-plus text-xs"></i>';
             addBtn.onclick = () => {
                 const newRow = createInputRow(item);
                 row.parentNode.insertBefore(newRow, row.nextSibling);
@@ -661,7 +729,7 @@
 
             const removeBtn = document.createElement('button');
             removeBtn.className = `${btnClass} hover:bg-red-500 hover:text-white text-red-500/60`;
-            removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-sm"></i>';
+            removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-xs"></i>';
             removeBtn.onclick = () => {
                 const siblings = row.parentNode.querySelectorAll(`[data-syntax="${item.syntax}"]`);
                 if(siblings.length > 1) {
@@ -686,7 +754,6 @@
 
         // --- 7. 核心逻辑 (Query Builder) ---
         function rebuildQuery() {
-            // 从DOM中读取所有输入值
             const allRows = document.querySelectorAll('#operator-container [data-syntax]');
             let parts = [];
 
@@ -731,6 +798,8 @@
                 case 'duckduckgo': url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`; break;
                 case 'yandex': url = `https://yandex.com/search/?text=${encodeURIComponent(query)}`; break;
                 case 'brave': url = `https://search.brave.com/search?q=${encodeURIComponent(query)}`; break;
+                // 新增 秘塔 搜索引擎
+                case 'metaso': url = `https://metaso.cn/?q=${encodeURIComponent(query)}`; break;
             }
             window.open(url, '_blank');
         }
@@ -762,12 +831,10 @@
             }, 2000);
         }
 
-        // --- 初始化 ---
         document.addEventListener('DOMContentLoaded', () => {
             applyRandomTheme();
             renderApp();
             
-            // Enter key
             document.addEventListener('keydown', (e) => {
                 if(e.key === 'Enter' && document.activeElement.tagName === 'INPUT') executeSearch();
             });
@@ -776,5 +843,4 @@
     </script>
 </body>
 </html>
-
 
