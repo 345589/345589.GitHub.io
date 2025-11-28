@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Liquid Search - Ultimate Morandi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght=400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 20s ease-in-out infinite',
+                        'pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        'slide-down': 'slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'liquid-shimmer': 'shimmer 8s linear infinite',
+                        'fade-in': 'fadeIn 0.2s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.95)' },
+                        },
+                        pop: {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '0% 50%' },
+                            '100%': { backgroundPosition: '200% 50%' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(-10px) scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                        }
+                    },
+                    borderRadius: {
+                        'apple': '20px', 
+                        'panel': '32px',
+                    },
+                    colors: {
+                        // 占位
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-blob-1: #7A8B84; /* Initial Morandi Color */
+            --bg-blob-2: #BFAFA6;
+            --bg-blob-3: #969CBA;
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-surface: rgba(255, 255, 255, 0.45);
+            --text-primary: #1F2937;
+            --text-secondary: #4B5563;
+        }
+
+        html.dark {
+            --bg-blob-1: #1e1b4b;
+            --bg-blob-2: #312e81;
+            --bg-blob-3: #111827;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-surface: rgba(20, 20, 25, 0.75);
+            --text-primary: #F3F4F6;
+            --text-secondary: #9CA3AF;
+        }
+
+        body {
+            background-color: #F3F4F6;
+            color: var(--text-primary);
+            transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
+            overflow-x: hidden;
+        }
+        html.dark body {
+            background-color: #050505;
+        }
+
+        /* --- Liquid BG --- */
+        .liquid-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.8;
+            animation: float 25s infinite alternate;
+            transition: background-color 1s ease, opacity 0.5s ease;
+        }
+        
+        html:not(.dark) .blob { mix-blend-mode: multiply; }
+        html.dark .blob { mix-blend-mode: hard-light; opacity: 0.3; }
+
+        .blob-1 { top: -10%; left: -10%; width: 60vw; height: 60vw; background: var(--bg-blob-1); }
+        .blob-2 { bottom: -10%; right: -10%; width: 70vw; height: 70vw; background: var(--bg-blob-2); animation-delay: -5s; }
+        .blob-3 { top: 30%; left: 30%; width: 50vw; height: 50vw; background: var(--bg-blob-3); animation-delay: -10s; }
+
+        /* --- Glass Panel --- */
+        .glass-panel {
+            background: var(--glass-surface);
+            backdrop-filter: blur(50px) saturate(160%);
+            -webkit-backdrop-filter: blur(50px) saturate(160%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 20px 40px -10px rgba(0,0,0,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
+            position: relative;
+        }
+        
+        .category-card { overflow: hidden; }
+
+        .card-body {
+            position: relative;
+        }
+        /* Fluid Shimmer */
+        .card-body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                120deg, 
+                transparent 0%, 
+                rgba(255,255,255,0.1) 30%, 
+                rgba(255,255,255,0.0) 50%, 
+                rgba(255,255,255,0.1) 70%, 
+                transparent 100%
+            );
+            background-size: 200% 200%;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+            animation: shimmer 15s linear infinite;
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        html.dark .glass-panel {
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+        }
+
+        /* --- Inputs --- */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 0; /* Fix flex overflow */
+        }
+        html.dark .glass-input {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+        .glass-input:focus {
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
+            transform: scale(1.005);
+        }
+        html.dark .glass-input:focus {
+            background: rgba(30, 30, 35, 1);
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.1);
+        }
+
+        /* Buttons */
+        .action-btn {
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-btn:active { transform: scale(0.96); }
+        .action-btn::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.2), transparent);
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .action-btn:hover::after { opacity: 1; }
+
+        /* --- Side Strip --- */
+        .side-strip {
+            position: absolute; top: 0; bottom: 0; width: 20px;
+            cursor: pointer; z-index: 20; transition: background-color 0.2s;
+            display: flex; align-items: center; justify-content: center; opacity: 0;
+        }
+        .side-strip:hover { background-color: rgba(0,0,0,0.05); opacity: 1; }
+        html.dark .side-strip:hover { background-color: rgba(255,255,255,0.1); }
+        .side-strip::before { content: ''; height: 20px; width: 4px; border-radius: 2px; background: currentColor; opacity: 0.3; }
+        .side-strip-right { right: 0; }
+        .side-strip-left { left: 0; }
+
+        .bottom-collapse-btn {
+            background: rgba(0,0,0,0.02);
+            border-top: 1px solid rgba(0,0,0,0.03);
+            color: var(--text-secondary);
+            font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .bottom-collapse-btn:hover { background: rgba(0,0,0,0.05); color: var(--text-primary); }
+        html.dark .bottom-collapse-btn { background: rgba(255,255,255,0.02); border-top-color: rgba(255,255,255,0.05); }
+        html.dark .bottom-collapse-btn:hover { background: rgba(255,255,255,0.08); }
+
+        /* Chips */
+        .input-chip {
+            padding: 2px 8px; font-size: 11px; font-weight: 600;
+            border-radius: 6px; background: rgba(0,0,0,0.05);
+            cursor: pointer; transition: all 0.2s; color: var(--text-secondary);
+            border: 1px solid transparent; user-select: none;
+        }
+        .input-chip:hover { background: rgba(0,0,0,0.1); transform: translateY(-1px); }
+        html.dark .input-chip { background: rgba(255,255,255,0.1); color: #ccc; }
+        html.dark .input-chip:hover { background: rgba(255,255,255,0.2); }
+        
+        /* Chip Group Headers */
+        .chip-group-label {
+            font-size: 10px; font-weight: 700; opacity: 0.5; margin-right: 4px; margin-left: 4px;
+        }
+
+        /* Custom Dropdown Styling - Restored Apple Liquid Style */
+        .custom-select-trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; height: 100%; padding: 0 1.5rem;
+            border-radius: 20px; 
+            cursor: pointer; user-select: none;
+            transition: all 0.2s;
+        }
+        .custom-select-menu {
+            position: absolute; 
+            top: calc(100% + 8px); 
+            /* FIX 1: Adjust position to left: 15px to move it slightly right of the container's left edge */
+            left: 15px; 
+            width: 180px;
+            /* Liquid Glass Effect */
+            background: rgba(255, 255, 255, 0.85); /* More opaque for visibility */
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px; /* Apple Rounded */
+            padding: 8px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.3) inset;
+            z-index: 100;
+            opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.95);
+            transform-origin: top left; /* Anchor animation to top left for left-based positioning */
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy Apple spring */
+        }
+        html.dark .custom-select-menu {
+            background: rgba(30, 30, 35, 0.85);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1) inset;
+        }
+        .custom-select-menu.active {
+            opacity: 1; visibility: visible; transform: translateY(0) scale(1);
+        }
+        .custom-option {
+            padding: 12px 16px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 14px; font-weight: 600;
+            color: var(--text-primary);
+            transition: background 0.2s;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .custom-option:hover {
+            background: rgba(0,0,0,0.06);
+        }
+        html.dark .custom-option:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        .custom-option.selected {
+            background: rgba(99, 102, 241, 0.15); /* Indigo tint */
+            color: #6366f1;
+        }
+        html.dark .custom-option.selected {
+            background: rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+        }
+        /* Override default text color for icon to keep the brand color */
+        .custom-option .fa-brands, .custom-option .fa-solid {
+            color: currentColor; /* Default to text color for uncolored icons */
+        }
+        .custom-option .text-current {
+            color: currentColor !important; /* Ensure icons without explicit color use text color */
+        }
+
+        ::-webkit-scrollbar { width: 0; }
+        
+        .toast {
+            background: rgba(255, 255, 255, 0.9); color: #333;
+            padding: 14px 30px; border-radius: 99px; font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5);
+        }
+        html.dark .toast {
+            background: rgba(30, 30, 30, 0.9); color: #fff;
+            border-color: rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-indigo-500 selection:text-white">
+
+    <div class="liquid-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="nav-header" class="fixed top-0 left-0 right-0 z-50 p-2 sm:p-3 transition-all duration-500">
+        <div class="max-w-7xl mx-auto">
+            <div id="nav-panel" class="glass-panel rounded-panel p-3 flex flex-col gap-2" style="transition: background-color 0.5s ease;">
+                
+                <div class="flex justify-between items-center px-1">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-apple bg-indigo-500 text-white flex items-center justify-center text-lg shadow-lg shadow-indigo-500/30">
+                            <i class="fa-solid fa-droplet"></i>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <h1 class="text-lg font-bold tracking-tight">Liquid Search</h1>
+                            <div class="flex items-center gap-2">
+                                <span class="px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-[9px] font-bold uppercase tracking-wider opacity-60">Ult.</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="applyRandomTheme()" class="w-9 h-9 rounded-full glass-input flex items-center justify-center hover:rotate-180 transition-transform duration-700 cursor-pointer shadow-sm group" title="换肤">
+                            <i class="fa-solid fa-palette text-sm opacity-60 group-hover:opacity-100 transition-opacity"></i>
+                        </button>
+                        <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-full glass-input flex items-center justify-center hover:scale-105 transition-transform cursor-pointer shadow-sm text-gray-700 dark:text-yellow-400" title="切换模式">
+                            <i class="fa-solid fa-moon text-sm dark:hidden"></i>
+                            <i class="fa-solid fa-sun text-sm hidden dark:block"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col lg:flex-row gap-2 relative">
+                    <div class="relative flex-grow group">
+                        <input type="text" id="main-query" placeholder="输入搜索词，或点击下方分类自动生成..." 
+                            class="w-full h-12 pl-5 pr-12 rounded-apple glass-input text-lg font-mono placeholder-gray-400 dark:placeholder-gray-600">
+                        <button onclick="copyQuery()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition" title="复制">
+                            <i class="fa-regular fa-copy text-base"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex gap-2 shrink-0 h-12 relative z-50">
+                        <!-- Custom Engine Selector (Replaces <select>) -->
+                        <div class="relative h-full" id="engine-selector-container">
+                            <!-- Initial state includes the color class for Google -->
+                            <div id="engine-trigger" class="custom-select-trigger glass-input rounded-apple text-sm font-bold min-w-[140px]" onclick="toggleEngineMenu()">
+                                <span id="current-engine-label"><i class="fa-brands fa-google mr-2 text-blue-500"></i>Google</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] opacity-50 transition-transform" id="engine-chevron"></i>
+                            </div>
+                            
+                            <!-- Hidden Data Input -->
+                            <input type="hidden" id="engine-select" value="google">
+
+                            <!-- Dropdown Menu -->
+                            <div id="engine-menu" class="custom-select-menu">
+                                <!-- UPDATED: Added color classes to icons and selectEngine function calls -->
+                                <div class="custom-option selected" onclick="selectEngine('google', 'Google', 'fa-brands fa-google', 'text-blue-500')"><i class="fa-brands fa-google w-5 text-blue-500"></i>Google</div>
+                                <div class="custom-option" onclick="selectEngine('bing', 'Bing', 'fa-brands fa-microsoft', 'text-yellow-500')"><i class="fa-brands fa-microsoft w-5 text-yellow-500"></i>Bing</div>
+                                <!-- 秘塔 (Metaso) - Using a dark purple/indigo for AI/Tech -->
+                                <div class="custom-option" onclick="selectEngine('metaso', '秘塔 (Metaso)', 'fa-solid fa-brain', 'text-indigo-600')"><i class="fa-solid fa-brain w-5 text-indigo-600"></i>秘塔</div>
+                                <!-- DuckDuckGo - Using a vibrant orange for the Duck logo -->
+                                <div class="custom-option" onclick="selectEngine('duckduckgo', 'DuckDuckGo', 'fa-solid fa-shield-cat', 'text-orange-500')"><i class="fa-solid fa-shield-cat w-5 text-orange-500"></i>DuckDuckGo</div>
+                                <!-- Yandex - Using a bright red for its primary brand color -->
+                                <div class="custom-option" onclick="selectEngine('yandex', 'Yandex', 'fa-brands fa-yandex', 'text-red-700')"><i class="fa-brands fa-yandex w-5 text-red-700"></i>Yandex</div>
+                                <!-- Brave - Using a vibrant orange for the Brave lion logo -->
+                                <div class="custom-option" onclick="selectEngine('brave', 'Brave', 'fa-solid fa-mask', 'text-orange-500')"><i class="fa-solid fa-mask w-5 text-orange-500"></i>Brave</div>
+                            </div>
+                        </div>
+
+                        <button id="search-btn" onclick="executeSearch()" class="h-full px-8 rounded-apple font-bold text-base tracking-wide flex items-center gap-2 shadow-lg action-btn text-white">
+                            <span>搜索</span> <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- FIX 2: Increased padding to h-[167px] (140 + 27 = 167) to push content down -->
+    <div class="h-[167px]"></div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 pb-20">
+        <div id="operator-container" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <!-- Injected by JS -->
+        </div>
+    </main>
+
+    <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-3 z-[100] pointer-events-none"></div>
+
+    <script>
+        // --- 1. Morandi Palette ---
+        const morandiPalette = [
+            '#7A8B84', '#8C9E9E', '#BFAFA6', '#969CBA', '#C7B8A1', '#948C75', 
+            '#838C87', '#D1C9C2', '#A6A29A', '#B6B0A5', '#9EA3AA', '#8C9184',
+            '#D6C6B9', '#E3DACE', '#BFB6B3', '#90949D', '#7D8A8B', '#A4B0BE',
+            '#8F7D76', '#766560', '#6D7973', '#82928D', '#9BAFA9', '#B5CCC6', 
+            '#738891', '#8FA6AC', '#ACBEC0', '#758a99', '#aebab0', '#b5a397',
+            '#6b705c', '#a5a58d', '#ffe8d6', '#ddbea9', '#cb997e', '#6c757d'
+        ];
+
+        function getRandomColor() {
+            return morandiPalette[Math.floor(Math.random() * morandiPalette.length)];
+        }
+
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // --- 2. Operator Data ---
+        const operatorData = {
+            essentials: {
+                title: "核心常用 (Essentials)",
+                icon: "fa-star",
+                desc: "Google 搜索最强指令集",
+                open: true,
+                items: [
+                    { key: 'exact', label: '精确匹配', syntax: '"{val}"', placeholder: 'exact phrase', desc: '强制匹配' },
+                    { key: 'or', label: '逻辑或', syntax: 'OR', type: 'logic_or', placeholder: 'apple, android', desc: '任意其一' },
+                    { key: 'exclude', label: '排除词 (-)', syntax: '-{val}', placeholder: 'advertising', desc: '排除结果' },
+                    { 
+                        key: 'site', label: '站内搜索', syntax: 'site:{val}', placeholder: 'zhihu.com', desc: '特定域名', 
+                        chips: ['.', '.com', '.org'] 
+                    },
+                    { 
+                        key: 'filetype', label: '文件类型', syntax: 'filetype:{val}', placeholder: 'pdf', desc: '文件格式',
+                        chipGroups: [
+                            { 
+                                name: "Office", 
+                                items: [
+                                    {label: "Word", val: "docx"}, {label: "doc", val: "doc"}, {label: "dotx", val: "dotx"}, {label: "dot", val: "dot"}, {label: "docm", val: "docm"},
+                                    {label: "Excel", val: "xlsx"}, {label: "xls", val: "xls"}, {label: "xlsm", val: "xlsm"}, {label: "xltx", val: "xltx"}, {label: "xlt", val: "xlt"}, {label: "csv", val: "csv"}, {label: "xlsb", val: "xlsb"},
+                                    {label: "PPT", val: "pptx"}, {label: "ppt", val: "ppt"}, {label: "pptm", val: "pptm"}, {label: "potx", val: "potx"}, {label: "pot", val: "pot"}, {label: "ppsx", val: "ppsx"}, {label: "pps", val: "pps"},
+                                    {label: "Other", val: "pdf"}, {label: "rtf", val: "rtf"}, {label: "accdb", val: "accdb"}, {label: "mdb", val: "mdb"}, {label: "pub", val: "pub"}
+                                ]
+                            },
+                            {
+                                name: "Image",
+                                items: [
+                                    {label: "jpg", val: "jpg"}, {label: "jpeg", val: "jpeg"}, {label: "png", val: "png"}, {label: "gif", val: "gif"}, {label: "webp", val: "webp"}, {label: "avif", val: "avif"},
+                                    {label: "Print", val: "tiff"}, {label: "tif", val: "tif"}, {label: "psd", val: "psd"},
+                                    {label: "Vector", val: "svg"}, {label: "ai", val: "ai"}, {label: "eps", val: "eps"},
+                                    {label: "Special", val: "bmp"}, {label: "ico", val: "ico"}, {label: "heic", val: "heic"}
+                                ]
+                            }
+                        ]
+                    },
+                    { key: 'intitle', label: '标题包含', syntax: 'intitle:{val}', placeholder: 'tutorial', desc: '标题含词' },
+                    { key: 'after', label: '时间之后', syntax: 'after:{val}', type: 'date_triple', placeholder: 'YYYY-MM-DD', desc: 'YYYY-MM-DD' },
+                    { key: 'before', label: '时间之前', syntax: 'before:{val}', type: 'date_triple', placeholder: 'YYYY-MM-DD', desc: 'YYYY-MM-DD' },
+                    { key: 'wildcard', label: '通配符 (*)', syntax: '*{val}*', type: 'wildcard', placeholder: 'ABC', desc: '任意字符' },
+                ]
+            },
+            logic: {
+                title: "逻辑与通用 (Logic)",
+                icon: "fa-network-wired",
+                desc: "布尔逻辑与模糊匹配",
+                open: false,
+                items: [
+                    { key: 'and', label: '逻辑与', syntax: 'AND', type: 'logic_and', placeholder: 'AI, Ethics', desc: '同时包含' },
+                    { key: 'range', label: '数值范围', syntax: '{val}..{val2}', type: 'range', placeholder: ['2010', '2025'], desc: '价格/年份' },
+                    { key: 'single_quote', label: '原词搜索', syntax: "'{val}'", placeholder: 'colour', desc: '不纠错' },
+                    { key: 'around', label: '临近词', syntax: 'AROUND({val})', type: 'func_arg', placeholder: '3', desc: '距离不超过N' },
+                    { key: 'hashtag', label: '标签 (#)', syntax: '#{val}', placeholder: 'DeepLearning', desc: 'Tag' },
+                    { key: 'mention', label: '提及 (@)', syntax: '@{val}', placeholder: 'elonmusk', desc: 'User' },
+                    { key: 'all', label: '全词匹配', syntax: 'all:{val}', placeholder: 'keywords', desc: '匹配所有' },
+                    { key: 'plus', label: '强制 (+)', syntax: '+{val}', placeholder: 'blood', desc: '强制包含' },
+                ]
+            },
+            files: {
+                title: "文件与媒体 (Media)",
+                icon: "fa-photo-film",
+                desc: "文档、图片与代码",
+                open: false,
+                items: [
+                    { key: 'imagesize', label: '图片尺寸', syntax: 'imagesize:{val}', type: 'dimension', placeholder: '1920x1080', desc: 'WxH' },
+                    { key: 'ext', label: '扩展名', syntax: 'ext:{val}', placeholder: 'docx', desc: '同 filetype' },
+                    { key: 'source', label: '新闻来源', syntax: 'source:{val}', placeholder: 'Reuters', desc: '新闻源' },
+                    { key: 'filename', label: '文件名', syntax: 'filename:{val}', placeholder: 'report', desc: '文件名含词' },
+                    { key: 'package', label: '包名', syntax: 'package:{val}', placeholder: 'com.google.maps', desc: 'Play Store' },
+                    { key: 'mime', label: 'MIME类型', syntax: 'mime:{val}', placeholder: 'text/csv', desc: 'MIME' },
+                    { key: 'src', label: '图片来源', syntax: 'src:{val}', placeholder: 'example.com', desc: 'Image Src' },
+                ]
+            },
+            structure: {
+                title: "网站结构 (Structure)",
+                icon: "fa-sitemap",
+                desc: "URL与链接深度挖掘",
+                open: false,
+                items: [
+                    { key: 'related', label: '相似网站', syntax: 'related:{val}', placeholder: 'time.com', desc: 'Similar' },
+                    { key: 'inurl', label: 'URL包含', syntax: 'inurl:{val}', placeholder: 'login', desc: 'URL Keyword' },
+                    { key: 'allintitle', label: '标题全含', syntax: 'allintitle:{val}', placeholder: 'review 2024', desc: 'Title All' },
+                    { key: 'allinurl', label: 'URL全含', syntax: 'allinurl:{val}', placeholder: 'admin dashboard', desc: 'URL All' },
+                    { key: 'intext', label: '正文包含', syntax: 'intext:{val}', placeholder: 'crypto', desc: 'Body Text' },
+                    { key: 'allintext', label: '正文全含', syntax: 'allintext:{val}', placeholder: 'data analysis', desc: 'Body All' },
+                    { key: 'inanchor', label: '锚文本', syntax: 'inanchor:{val}', placeholder: 'click here', desc: 'Link Text' },
+                    { key: 'blogurl', label: '博客URL', syntax: 'blogurl:{val}', placeholder: 'wordpress', desc: 'Blog URL' },
+                    { key: 'link', label: '反向链接', syntax: 'link:{val}', placeholder: 'wikipedia.org', desc: 'Backlinks' },
+                    { key: 'info', label: '网站信息', syntax: 'info:{val}', placeholder: 'bbc.com', desc: 'Site Info' },
+                    { key: 'cache', label: '网页快照', syntax: 'cache:{val}', placeholder: 'cnn.com', desc: 'Cached' },
+                ]
+            },
+            geo_lang: {
+                title: "地理与时间 (Geo & Time)",
+                icon: "fa-earth-americas",
+                desc: "地区、语言与时区",
+                open: false,
+                items: [
+                    { key: 'location', label: '位置', syntax: 'location:{val}', placeholder: 'New York', desc: 'News Loc' },
+                    // Added '-' chip strictly, and restored the mobile UI fix.
+                    { key: 'lang', label: '语言', syntax: 'lang:{val}', placeholder: 'zh-CN', desc: 'Language', chips: ['-'] },
+                    { key: 'country', label: '国家', syntax: 'country:{val}', placeholder: 'US', desc: 'Country Code' },
+                    { key: 'region', label: '区域', syntax: 'region:{val}', placeholder: 'uk', desc: 'Region Code' },
+                    { key: 'timezone', label: '时区', syntax: 'timezone:{val}', placeholder: 'London', desc: 'Time' },
+                    { key: 'weather', label: '天气', syntax: 'weather:{val}', placeholder: 'Tokyo', desc: 'Weather' },
+                    { key: 'daterange', label: 'Julian日期', syntax: 'daterange:{val}-{val2}', type: 'range', placeholder: ['2459580', '2459945'], desc: 'Julian Date' },
+                    { key: 'when', label: '时段', syntax: 'when:{val}', placeholder: '1y', desc: 'Recent' },
+                    { key: 'map', label: '地图', syntax: 'map:{val}', placeholder: 'Paris', desc: 'Maps' },
+                ]
+            },
+            special: {
+                title: "垂直搜索 (Vertical)",
+                icon: "fa-rocket",
+                desc: "专利、股票与书籍",
+                open: false,
+                items: [
+                    { key: 'define', label: '定义', syntax: 'define:{val}', placeholder: 'osmosis', desc: 'Dictionary' },
+                    { key: 'movie', label: '电影', syntax: 'movie:{val}', placeholder: 'Inception', desc: 'Movie' },
+                    { key: 'stocks', label: '股票', syntax: 'stocks:{val}', placeholder: 'NVDA', desc: 'Stocks' },
+                    { key: 'patent', label: '专利', syntax: 'patent:{val}', placeholder: 'US1234567', desc: 'Patents' },
+                    { key: 'book', label: '书籍', syntax: 'book:{val}', placeholder: 'Three Body', desc: 'Books' },
+                    { key: 'music', label: '音乐', syntax: 'music:{val}', placeholder: 'Bach', desc: 'Music' },
+                    { key: 'flight', label: '航班', syntax: 'flight:{val}', placeholder: 'CA988', desc: 'Flights' },
+                    { key: 'apps', label: '应用', syntax: 'apps:{val}', placeholder: 'Notion', desc: 'Apps' },
+                ]
+            }
+        };
+
+        // --- 3. Rendering & Logic ---
+        function applyRandomTheme() {
+            const root = document.documentElement;
+            root.style.setProperty('--bg-blob-1', getRandomColor());
+            root.style.setProperty('--bg-blob-2', getRandomColor());
+            root.style.setProperty('--bg-blob-3', getRandomColor());
+
+            const navPanel = document.getElementById('nav-panel');
+            navPanel.style.backgroundColor = hexToRgba(getRandomColor(), 0.2); 
+            document.getElementById('search-btn').style.backgroundColor = getRandomColor();
+            
+            document.querySelectorAll('.category-card').forEach(card => {
+                const cardColor = getRandomColor();
+                card.dataset.tint = cardColor;
+                card.querySelector('.card-header').style.backgroundColor = hexToRgba(cardColor, 0.15);
+                card.querySelector('.card-body').style.backgroundColor = hexToRgba(cardColor, 0.08);
+            });
+        }
+
+        function renderApp() {
+            const container = document.getElementById('operator-container');
+            container.innerHTML = '';
+
+            Object.entries(operatorData).forEach(([catKey, catData]) => {
+                const cardTint = getRandomColor();
+                const section = document.createElement('div');
+                section.className = 'glass-panel rounded-panel transition-all duration-300 category-card group';
+                section.dataset.open = catData.open;
+
+                const header = document.createElement('div');
+                header.className = 'card-header p-5 flex items-center justify-between cursor-pointer select-none transition-colors duration-300';
+                header.style.backgroundColor = hexToRgba(cardTint, 0.15);
+
+                header.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-apple flex items-center justify-center text-lg shadow-sm text-white transition-colors duration-300" style="background-color: ${cardTint}">
+                            <i class="fa-solid ${catData.icon}"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg">${catData.title}</div>
+                            <div class="text-xs opacity-60 mt-0.5 font-medium tracking-wide">${catData.desc}</div>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-black/5 dark:bg-white/10 transition-transform duration-300 ${catData.open ? 'rotate-180' : ''}">
+                        <i class="fa-solid fa-chevron-down opacity-60 text-xs"></i>
+                    </div>
+                `;
+
+                const bodyContainer = document.createElement('div');
+                bodyContainer.className = 'card-body relative transition-all duration-500 ease-in-out';
+                bodyContainer.style.backgroundColor = hexToRgba(cardTint, 0.08);
+                
+                if (catData.open) {
+                    bodyContainer.style.maxHeight = '5000px';
+                    bodyContainer.style.opacity = '1';
+                } else {
+                    bodyContainer.style.maxHeight = '0px';
+                    bodyContainer.style.opacity = '0';
+                    bodyContainer.classList.add('overflow-hidden');
+                }
+
+                const rightStrip = document.createElement('div');
+                rightStrip.className = 'side-strip side-strip-right';
+                rightStrip.onclick = (e) => { e.stopPropagation(); toggleSection(section, header, bodyContainer, false); };
+                
+                const leftStrip = document.createElement('div');
+                leftStrip.className = 'side-strip side-strip-left';
+                leftStrip.onclick = (e) => { e.stopPropagation(); toggleSection(section, header, bodyContainer, false); };
+
+                const contentList = document.createElement('div');
+                contentList.className = 'p-5 pt-2 grid gap-3 pl-8 pr-8';
+                
+                catData.items.forEach(item => {
+                    contentList.appendChild(createInputRow(item));
+                });
+
+                const bottomBtn = document.createElement('div');
+                bottomBtn.className = 'bottom-collapse-btn h-12 flex items-center justify-center gap-2 mt-2';
+                bottomBtn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> <span>点击收起</span>';
+                bottomBtn.onclick = (e) => { e.stopPropagation(); toggleSection(section, header, bodyContainer, false); };
+
+                bodyContainer.append(leftStrip, rightStrip, contentList, bottomBtn);
+
+                header.onclick = () => {
+                    const isOpen = bodyContainer.style.maxHeight !== '0px' && !bodyContainer.classList.contains('overflow-hidden');
+                    toggleSection(section, header, bodyContainer, !isOpen);
+                };
+
+                section.append(header, bodyContainer);
+                container.appendChild(section);
+            });
+        }
+
+        function toggleSection(section, header, body, shouldOpen) {
+            const iconWrapper = header.querySelector('.rotate-180') || header.querySelector('.fa-chevron-down').parentElement;
+            if (shouldOpen) {
+                body.classList.remove('overflow-hidden');
+                body.style.maxHeight = '5000px';
+                body.style.opacity = '1';
+                iconWrapper.classList.add('rotate-180');
+            } else {
+                body.style.maxHeight = '0px';
+                body.style.opacity = '0';
+                iconWrapper.classList.remove('rotate-180');
+                setTimeout(() => body.classList.add('overflow-hidden'), 500);
+            }
+        }
+
+        function createInputRow(item) {
+            const row = document.createElement('div');
+            // FIX: mobile UI排版bug fix: ensure all containers are flexible and don't force width
+            row.className = 'flex flex-col sm:flex-row gap-3 p-3 rounded-apple bg-white/40 dark:bg-black/20 hover:bg-white/60 dark:hover:bg-black/30 transition-colors duration-200 animate-slide-down group/row border border-white/30 dark:border-white/5 relative z-10 items-start sm:items-center min-w-0';
+            row.dataset.syntax = item.syntax;
+            row.dataset.type = item.type || 'standard';
+
+            // 1. Label and Actions Container (Flex to allow actions on the right)
+            const labelActionsWrapper = document.createElement('div');
+            // w-full on mobile, flex-shrink-0 on desktop
+            labelActionsWrapper.className = 'flex items-center justify-between w-full sm:w-auto sm:flex-shrink-0';
+            
+            // 1.1 Label
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'flex flex-col justify-center pl-1';
+            labelDiv.innerHTML = `
+                <span class="font-bold text-sm select-none">${item.label}</span>
+                <span class="text-[10px] font-mono opacity-40 mt-0.5 select-none truncate">${item.syntax.split(':')[0]}</span>
+            `;
+            
+            // 1.2 Actions (Green + and Red X, placed right of the label)
+            const actions = document.createElement('div');
+            // FIX: Changed order and position as requested (Green + then Red X)
+            actions.className = 'flex items-center gap-1 opacity-60 group-hover/row:opacity-100 transition-opacity flex-shrink-0 ml-4'; 
+            const btnClass = "w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-200 bg-white/30 dark:bg-black/20 cursor-pointer";
+            
+            // Green + (Left)
+            const addBtn = document.createElement('button');
+            addBtn.className = `${btnClass} hover:bg-green-500 hover:text-white text-green-600/70`;
+            addBtn.innerHTML = '<i class="fa-solid fa-plus text-[10px]"></i>';
+            addBtn.onclick = () => {
+                const newRow = createInputRow(item);
+                row.parentNode.insertBefore(newRow, row.nextSibling);
+                setTimeout(() => newRow.querySelector('input').focus(), 50);
+            };
+
+            // Red X (Right/Most Right)
+            const removeBtn = document.createElement('button');
+            removeBtn.className = `${btnClass} hover:bg-red-500 hover:text-white text-red-500/60`;
+            removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
+            removeBtn.onclick = () => {
+                const siblings = row.parentNode.querySelectorAll(`[data-syntax="${item.syntax}"]`);
+                if(siblings.length > 1) {
+                    row.style.opacity = '0'; row.style.transform = 'translateY(-10px)';
+                    setTimeout(() => { row.remove(); rebuildQuery(); }, 250);
+                } else {
+                    row.querySelectorAll('input').forEach(i => i.value = '');
+                    rebuildQuery();
+                }
+            };
+            
+            actions.append(addBtn, removeBtn);
+            labelActionsWrapper.append(labelDiv, actions);
+
+
+            // 2. Input Container
+            const inputContainer = document.createElement('div');
+            // FIX: min-w-0 allows child inputs to shrink instead of overflowing
+            inputContainer.className = 'flex-grow flex flex-col w-full gap-2 min-w-0';
+            
+            const inputsWrapper = document.createElement('div');
+            // FIX: min-w-0 ensures this flex container doesn't force width on small screens
+            inputsWrapper.className = 'flex items-center gap-2 w-full min-w-0';
+
+            const uniqueId = `inp-${Math.random().toString(36).substr(2,9)}`;
+
+            // --- Render Logic Based on Type ---
+            if (item.type === 'range' || item.type === 'daterange') {
+                // FIX: flex-1 combined with min-w-0 ensures equal split without overflow
+                inputsWrapper.innerHTML = `
+                    <input type="text" class="flex-1 min-w-0 h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="Start" oninput="rebuildQuery()">
+                    <span class="opacity-30 font-bold flex-shrink-0">~</span>
+                    <input type="text" class="flex-1 min-w-0 h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="End" oninput="rebuildQuery()">
+                `;
+            } 
+            else if (item.type === 'date_triple') {
+                // FIX: flex-1 with min-w-0 or specific widths that sum to < 100%
+                inputsWrapper.innerHTML = `
+                    <input type="text" class="flex-1 min-w-0 h-10 px-2 rounded-apple glass-input text-sm font-mono text-center" placeholder="YYYY" maxlength="4" oninput="rebuildQuery()">
+                    <span class="opacity-30 font-bold flex-shrink-0">-</span>
+                    <input type="text" class="w-12 flex-shrink-0 h-10 px-2 rounded-apple glass-input text-sm font-mono text-center" placeholder="MM" maxlength="2" oninput="rebuildQuery()">
+                    <span class="opacity-30 font-bold flex-shrink-0">-</span>
+                    <input type="text" class="w-12 flex-shrink-0 h-10 px-2 rounded-apple glass-input text-sm font-mono text-center" placeholder="DD" maxlength="2" oninput="rebuildQuery()">
+                `;
+            }
+            else if (item.type === 'dimension') {
+                inputsWrapper.innerHTML = `
+                    <input type="text" class="flex-1 min-w-0 h-10 px-3 rounded-apple glass-input text-sm font-mono text-center" placeholder="Width" oninput="rebuildQuery()">
+                    <span class="opacity-30 font-bold text-xs flex-shrink-0">x</span>
+                    <input type="text" class="flex-1 min-w-0 h-10 px-3 rounded-apple glass-input text-sm font-mono text-center" placeholder="Height" oninput="rebuildQuery()">
+                `;
+            }
+            else if (item.type === 'func_arg' && item.key === 'around') {
+                 inputsWrapper.innerHTML = `<input type="number" class="w-20 h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="N" oninput="rebuildQuery()">`;
+            } 
+            else {
+                // Standard & Chips
+                inputsWrapper.innerHTML = `<input type="text" id="${uniqueId}" class="w-full h-10 px-3 rounded-apple glass-input text-sm font-mono min-w-0" placeholder="${item.placeholder}" oninput="rebuildQuery()">`;
+                
+                // --- Simple Chips (e.g., '-' for language in Geo/Time) ---
+                if (item.chips) {
+                    const chipContainer = document.createElement('div');
+                    // Changed ml-1 to ml-0 for better mobile alignment
+                    chipContainer.className = "flex gap-1 shrink-0"; 
+                    item.chips.forEach(suffix => {
+                        const chip = document.createElement('button');
+                        chip.className = 'input-chip';
+                        chip.innerText = suffix;
+                        chip.onclick = (e) => {
+                            e.preventDefault();
+                            const inp = document.getElementById(uniqueId);
+                            // Only append if value is empty or not already ending with the suffix
+                            if (!inp.value.endsWith(suffix)) { 
+                                inp.value += suffix; 
+                            }
+                            inp.focus(); rebuildQuery();
+                        };
+                        chipContainer.appendChild(chip);
+                    });
+                    inputsWrapper.appendChild(chipContainer);
+                }
+            }
+            inputContainer.appendChild(inputsWrapper);
+
+            // --- Advanced Chip Groups (Filetypes) ---
+            if (item.chipGroups) {
+                const groupContainer = document.createElement('div');
+                groupContainer.className = "flex flex-wrap gap-y-2 gap-x-3 mt-1 pl-1";
+                
+                item.chipGroups.forEach(group => {
+                    const gDiv = document.createElement('div');
+                    gDiv.className = "flex flex-wrap items-center gap-1";
+                    
+                    // Group Label (e.g., Office)
+                    const gLabel = document.createElement('span');
+                    gLabel.className = "chip-group-label";
+                    gLabel.innerText = group.name;
+                    gDiv.appendChild(gLabel);
+
+                    group.items.forEach(chipItem => {
+                        const chip = document.createElement('button');
+                        chip.className = 'input-chip';
+                        // Dot prefix handled in value
+                        chip.innerText = '.' + chipItem.val;
+                        chip.title = chipItem.label;
+                        chip.onclick = (e) => {
+                            e.preventDefault();
+                            const inp = document.getElementById(uniqueId);
+                            inp.value = chipItem.val; 
+                            inp.focus(); rebuildQuery();
+                        };
+                        gDiv.appendChild(chip);
+                    });
+                    groupContainer.appendChild(gDiv);
+                });
+                inputContainer.appendChild(groupContainer);
+            }
+
+            // FIX: Appending the label/actions wrapper and then the input container
+            row.append(labelActionsWrapper, inputContainer);
+            return row;
+        }
+
+        function rebuildQuery() {
+            const allRows = document.querySelectorAll('#operator-container [data-syntax]');
+            let parts = [];
+
+            allRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const v1 = inputs[0]?.value.trim();
+                const type = row.dataset.type;
+                const syntax = row.dataset.syntax;
+
+                if (!v1) return;
+
+                let res = '';
+
+                if (type === 'range' || type === 'daterange') {
+                    const v2 = inputs[1]?.value.trim();
+                    if (v2) res = syntax.replace('{val}', v1).replace('{val2}', v2);
+                    else res = `${v1}..`;
+                } 
+                else if (type === 'date_triple') {
+                    const y = inputs[0].value.trim();
+                    const m = inputs[1].value.trim();
+                    const d = inputs[2].value.trim();
+                    // Only build syntax if all three parts are present
+                    if (y && m && d) {
+                        res = syntax.replace('{val}', `${y}-${m}-${d}`);
+                    }
+                }
+                else if (type === 'dimension') {
+                    const w = inputs[0].value.trim();
+                    const h = inputs[1].value.trim();
+                    if (w && h) {
+                        res = syntax.replace('{val}', `${w}x${h}`);
+                    }
+                }
+                else if (type === 'logic_or') {
+                    const terms = v1.split(/[,，]/).map(t => t.trim()).filter(t => t);
+                    if (terms.length > 1) res = `(${terms.join(' OR ')})`;
+                    else if (terms.length === 1) res = terms[0];
+                } 
+                else if (type === 'logic_and') {
+                    // Logic AND Fix: Join with ' AND '
+                    const terms = v1.split(/[,，]/).map(t => t.trim()).filter(t => t);
+                    if (terms.length > 1) res = `(${terms.join(' AND ')})`;
+                    else if (terms.length === 1) res = terms[0];
+                }
+                else if (type === 'wildcard') {
+                    // Fix wildcard output to be *ABC*
+                    res = syntax.replace('{val}', v1);
+                }
+                else {
+                    res = syntax.replace('{val}', v1);
+                }
+
+                if(res) parts.push(res);
+            });
+
+            document.getElementById('main-query').value = parts.join(' ');
+        }
+
+        function executeSearch() {
+            const query = document.getElementById('main-query').value.trim();
+            if (!query) { showToast("⚠️ 内容为空"); return; }
+            const engine = document.getElementById('engine-select').value;
+            let url = '';
+            switch(engine) {
+                case 'google': url = `https://www.google.com/search?q=${encodeURIComponent(query)}`; break;
+                case 'bing': url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`; break;
+                case 'duckduckgo': url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`; break;
+                case 'yandex': url = `https://yandex.com/search/?text=${encodeURIComponent(query)}`; break;
+                case 'brave': url = `https://search.brave.com/search?q=${encodeURIComponent(query)}`; break;
+                case 'metaso': url = `https://metaso.cn/?q=${encodeURIComponent(query)}`; break;
+            }
+            window.open(url, '_blank');
+        }
+
+        function copyQuery() {
+            const input = document.getElementById('main-query');
+            if(!input.value) return;
+            // Use execCommand for broader compatibility in sandboxed environments
+            input.select();
+            document.execCommand('copy');
+            showToast("✨ 已复制");
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast animate-pop';
+            el.innerText = msg;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0'; el.style.transform = 'translateY(10px)';
+                setTimeout(() => el.remove(), 300);
+            }, 2000);
+        }
+
+        // --- Custom Engine Selector Logic ---
+        function toggleEngineMenu() {
+            const menu = document.getElementById('engine-menu');
+            const chevron = document.getElementById('engine-chevron');
+            menu.classList.toggle('active');
+            
+            if(menu.classList.contains('active')) {
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        // UPDATED: Added colorClass parameter
+        function selectEngine(value, label, iconClass, colorClass) {
+            document.getElementById('engine-select').value = value;
+            // Apply icon and color class to the label
+            document.getElementById('current-engine-label').innerHTML = `<i class="${iconClass} mr-2 ${colorClass}"></i>${label}`;
+            
+            // Highlight selected
+            document.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+            // Use event.target to find the correct option element, traversing up if necessary
+            let targetOption = event.target.closest('.custom-option');
+            if (targetOption) {
+                 targetOption.classList.add('selected');
+            }
+            
+            toggleEngineMenu(); // Close
+        }
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('engine-selector-container');
+            const menu = document.getElementById('engine-menu');
+            if(menu.classList.contains('active') && !container.contains(e.target)) {
+                toggleEngineMenu();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyRandomTheme();
+            renderApp();
+            document.addEventListener('keydown', (e) => {
+                if(e.key === 'Enter' && document.activeElement.tagName === 'INPUT') executeSearch();
+            });
+        });
+    </script>
+</body>
+</html>
+
