@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Liquid Search - Ultimate Morandi</title>
+    <title>Advanced Search Operators</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght=400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -248,9 +248,15 @@
         .custom-select-menu {
             position: absolute; 
             top: calc(100% + 8px); 
-            /* FIX 1: Adjust position to left: 15px to move it slightly right of the container's left edge */
+            /* Adjust position to left: 15px to move it slightly right of the container's left edge */
             left: 15px; 
-            width: 180px;
+            width: 250px; /* Increased width to accommodate long domain names */
+            
+            /* --- CORE CHANGE: Set Max Height and Enable Scrolling --- */
+            max-height: 400px; /* Set a fixed max height (approx. 7-8 options) */
+            overflow-y: auto; /* Enable vertical scrolling */
+            /* ----------------------------------------------------- */
+
             /* Liquid Glass Effect */
             background: rgba(255, 255, 255, 0.85); /* More opaque for visibility */
             backdrop-filter: blur(20px) saturate(180%);
@@ -303,7 +309,19 @@
             color: currentColor !important; /* Ensure icons without explicit color use text color */
         }
 
-        ::-webkit-scrollbar { width: 0; }
+        /* Adjust scrollbar visibility/style */
+        .custom-select-menu::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-select-menu::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.15);
+            border-radius: 10px;
+        }
+        html.dark .custom-select-menu::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.2);
+        }
+        /* Keep main body scrollbar hidden */
+        body::-webkit-scrollbar { width: 0; }
         
         .toast {
             background: rgba(255, 255, 255, 0.9); color: #333;
@@ -332,11 +350,11 @@
                 
                 <div class="flex justify-between items-center px-1">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-apple bg-indigo-500 text-white flex items-center justify-center text-lg shadow-lg shadow-indigo-500/30">
-                            <i class="fa-solid fa-droplet"></i>
+                        <div class="w-9 h-9 rounded-apple flex items-center justify-center text-lg shadow-lg shadow-indigo-500/30" style="background-color: #6366f1;">
+                            <i class="fa-solid fa-droplet text-white"></i>
                         </div>
                         <div class="flex items-baseline gap-2">
-                            <h1 class="text-lg font-bold tracking-tight">Liquid Search</h1>
+                            <h1 class="text-lg font-bold tracking-tight">Advanced Search Operators</h1>
                             <div class="flex items-center gap-2">
                                 <span class="px-1.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-[9px] font-bold uppercase tracking-wider opacity-60">Ult.</span>
                             </div>
@@ -366,32 +384,23 @@
                     <div class="flex gap-2 shrink-0 h-12 relative z-50">
                         <!-- Custom Engine Selector (Replaces <select>) -->
                         <div class="relative h-full" id="engine-selector-container">
-                            <!-- Initial state includes the color class for Google -->
+                            <!-- Initial state set by JS on load -->
                             <div id="engine-trigger" class="custom-select-trigger glass-input rounded-apple text-sm font-bold min-w-[140px]" onclick="toggleEngineMenu()">
-                                <span id="current-engine-label"><i class="fa-brands fa-google mr-2 text-blue-500"></i>Google</span>
-                            <i class="fa-solid fa-chevron-down text-[10px] opacity-50 transition-transform" id="engine-chevron"></i>
+                                <!-- Initial label set by JS -->
+                                <span id="current-engine-label"><i class="fa-brands fa-google mr-2 text-red-500"></i>Google</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] opacity-50 transition-transform" id="engine-chevron"></i>
                             </div>
                             
                             <!-- Hidden Data Input -->
                             <input type="hidden" id="engine-select" value="google">
 
-                            <!-- Dropdown Menu -->
+                            <!-- Dropdown Menu - Dynamically generated by JS -->
                             <div id="engine-menu" class="custom-select-menu">
-                                <!-- UPDATED: Added color classes to icons and selectEngine function calls -->
-                                <div class="custom-option selected" onclick="selectEngine('google', 'Google', 'fa-brands fa-google', 'text-blue-500')"><i class="fa-brands fa-google w-5 text-blue-500"></i>Google</div>
-                                <div class="custom-option" onclick="selectEngine('bing', 'Bing', 'fa-brands fa-microsoft', 'text-yellow-500')"><i class="fa-brands fa-microsoft w-5 text-yellow-500"></i>Bing</div>
-                                <!-- 秘塔 (Metaso) - Using a dark purple/indigo for AI/Tech -->
-                                <div class="custom-option" onclick="selectEngine('metaso', '秘塔 (Metaso)', 'fa-solid fa-brain', 'text-indigo-600')"><i class="fa-solid fa-brain w-5 text-indigo-600"></i>秘塔</div>
-                                <!-- DuckDuckGo - Using a vibrant orange for the Duck logo -->
-                                <div class="custom-option" onclick="selectEngine('duckduckgo', 'DuckDuckGo', 'fa-solid fa-shield-cat', 'text-orange-500')"><i class="fa-solid fa-shield-cat w-5 text-orange-500"></i>DuckDuckGo</div>
-                                <!-- Yandex - Using a bright red for its primary brand color -->
-                                <div class="custom-option" onclick="selectEngine('yandex', 'Yandex', 'fa-brands fa-yandex', 'text-red-700')"><i class="fa-brands fa-yandex w-5 text-red-700"></i>Yandex</div>
-                                <!-- Brave - Using a vibrant orange for the Brave lion logo -->
-                                <div class="custom-option" onclick="selectEngine('brave', 'Brave', 'fa-solid fa-mask', 'text-orange-500')"><i class="fa-solid fa-mask w-5 text-orange-500"></i>Brave</div>
+                                <!-- Content will be rendered here by JS -->
                             </div>
                         </div>
 
-                        <button id="search-btn" onclick="executeSearch()" class="h-full px-8 rounded-apple font-bold text-base tracking-wide flex items-center gap-2 shadow-lg action-btn text-white">
+                        <button id="search-btn" onclick="executeSearch()" class="h-full px-8 rounded-apple font-bold text-base tracking-wide flex items-center gap-2 shadow-lg action-btn text-white" style="background-color: #7A8B84;">
                             <span>搜索</span> <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
                     </div>
@@ -400,7 +409,7 @@
         </div>
     </nav>
 
-    <!-- FIX 2: Increased padding to h-[167px] (140 + 27 = 167) to push content down -->
+    <!-- Increased padding to h-[167px] to push content down -->
     <div class="h-[167px]"></div>
 
     <!-- Main Content -->
@@ -409,6 +418,14 @@
             <!-- Injected by JS -->
         </div>
     </main>
+    
+    <!-- Feedback Email Section (New Addition) -->
+    <footer class="max-w-7xl mx-auto px-4 pb-10 pt-5 text-center">
+        <div class="text-xs text-gray-500 dark:text-gray-400 opacity-70">
+            <p class="font-semibold tracking-wider mb-1">Feedback Email / 反馈邮箱</p>
+            <a href="mailto:9kbwfzzsp@mozmail.com" class="text-sm font-mono hover:text-indigo-500 transition-colors">9kbwfzzsp@mozmail.com</a>
+        </div>
+    </footer>
 
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-3 z-[100] pointer-events-none"></div>
 
@@ -434,7 +451,118 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        // --- 2. Operator Data ---
+        // --- 2. Engine Data (Refactored for dynamic rendering and execution) ---
+        const engineList = {
+            // --- Original Engines ---
+            google: {
+                label: 'Google', url: 'https://www.google.com/search?q=', 
+                icon: 'fa-brands fa-google', color: 'text-red-500', type: 'standard' // Red as dominant color
+            },
+            bing: {
+                label: 'Bing', url: 'https://www.bing.com/search?q=', 
+                icon: 'fa-brands fa-microsoft', color: 'text-blue-600', type: 'standard' // Blue brand color
+            },
+            metaso: {
+                label: '秘塔 (Metaso)', url: 'https://metaso.cn/?q=', 
+                icon: 'fa-solid fa-brain', color: 'text-indigo-600', type: 'standard'
+            },
+            duckduckgo: { // FIX: New icon to distinguish from Brave
+                label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=',
+                icon: 'fa-solid fa-search-dollar', color: 'text-orange-500', type: 'standard' 
+            },
+            yandex: {
+                label: 'Yandex', url: 'https://yandex.com/search/?text=',
+                icon: 'fa-brands fa-yandex', color: 'text-red-700', type: 'standard'
+            },
+            brave: {
+                label: 'Brave', url: 'https://search.brave.com/search?q=',
+                icon: 'fa-solid fa-mask', color: 'text-orange-600', type: 'standard' // Darker orange
+            },
+            
+            // --- New Engines (Based on user request) ---
+            perplexity: {
+                label: 'perplexity.ai', url: 'https://www.perplexity.ai/search?q=', 
+                icon: 'fa-solid fa-wand-magic-sparkles', color: 'text-blue-700', type: 'standard'
+            },
+            yahoo: {
+                label: 'yahoo.com', url: 'https://search.yahoo.com/search?q=',
+                icon: 'fa-brands fa-yahoo', color: 'text-purple-600', type: 'standard'
+            },
+            qwant: { // SPECIAL TYPE: requires appending &t=web and query is in the middle
+                label: 'qwant.com', url: 'https://www.qwant.com/?q=',
+                icon: 'fa-solid fa-dice', color: 'text-pink-500', type: 'qwant' 
+            },
+            mojeek: {
+                label: 'mojeek.com', url: 'https://www.mojeek.com/search?q=',
+                icon: 'fa-solid fa-leaf', color: 'text-green-600', type: 'standard'
+            },
+            givero: {
+                label: 'givero.com', url: 'https://www.givero.com/results?q=',
+                icon: 'fa-solid fa-hand-heart', color: 'text-pink-600', type: 'standard'
+            },
+            fireball: {
+                label: 'fireball.com', url: 'https://fireball.com/search/?f=web&q=',
+                icon: 'fa-solid fa-fire-burner', color: 'text-red-600', type: 'standard'
+            },
+            dogpile: {
+                label: 'dogpile.com', url: 'https://www.dogpile.com/serp?q=',
+                icon: 'fa-solid fa-dog', color: 'text-amber-700', type: 'standard'
+            },
+            gigablast: {
+                label: 'gigablast.org', url: 'https://gigablast.org/search/?q=',
+                icon: 'fa-solid fa-explosion', color: 'text-yellow-600', type: 'standard'
+            },
+            presearch: {
+                label: 'presearch.com', url: 'https://presearch.com/search?q=',
+                icon: 'fa-solid fa-lock', color: 'text-blue-500', type: 'standard'
+            },
+            ecosia: {
+                label: 'ecosia.org', url: 'https://www.ecosia.org/search?method=index&q=',
+                icon: 'fa-solid fa-tree', color: 'text-green-500', type: 'standard'
+            },
+            lycos: {
+                label: 'lycos.com', url: 'https://search.lycos.com/web/?q=',
+                icon: 'fa-solid fa-paw', color: 'text-red-400', type: 'standard'
+            },
+            luxirty: {
+                label: 'luxirty.com', url: 'https://search.luxirty.com/search?q=',
+                icon: 'fa-solid fa-gem', color: 'text-purple-400', type: 'standard'
+            },
+            metasearx: {
+                label: 'metasearx.com', url: 'https://metasearx.com/?q=',
+                icon: 'fa-solid fa-magnifying-glass-chart', color: 'text-teal-500', type: 'standard'
+            },
+            metacrawler: {
+                label: 'metacrawler.com', url: 'https://www.metacrawler.com/serp?q=',
+                icon: 'fa-solid fa-spider', color: 'text-indigo-500', type: 'standard'
+            },
+            karma: {
+                label: 'karmasearch.org', url: 'https://karmasearch.org/search?q=',
+                icon: 'fa-solid fa-ankh', color: 'text-yellow-700', type: 'standard'
+            },
+            marginalia: {
+                label: 'marginalia-search.com', url: 'https://marginalia-search.com/search?query=',
+                icon: 'fa-solid fa-book-bookmark', color: 'text-stone-500', type: 'standard' // Changed to stone/brown
+            },
+            excite: {
+                label: 'excite.com', url: 'https://results.excite.com/serp?q=',
+                icon: 'fa-solid fa-bolt', color: 'text-purple-700', type: 'standard'
+            },
+            searchengines100: {
+                label: '100searchengines.com', url: 'https://www.100searchengines.com/?q=',
+                icon: 'fa-solid fa-list-ol', color: 'text-gray-500', type: 'standard'
+            },
+            ghostery: { // SPECIAL TYPE: uses %s placeholder
+                label: 'ghosterysearch.com', url: 'https://ghosterysearch.com/search?q=%s',
+                icon: 'fa-solid fa-ghost', color: 'text-blue-500', type: 'placeholder'
+            },
+            lukol: { // SPECIAL TYPE: uses %s placeholder
+                label: 'lukol.com', url: 'https://m.lukol.com/s.php?q=%s',
+                icon: 'fa-solid fa-mobile-screen', color: 'text-green-700', type: 'placeholder'
+            }
+        };
+
+        // --- 3. Operator Data (Unchanged) ---
         const operatorData = {
             essentials: {
                 title: "核心常用 (Essentials)",
@@ -535,7 +663,6 @@
                 open: false,
                 items: [
                     { key: 'location', label: '位置', syntax: 'location:{val}', placeholder: 'New York', desc: 'News Loc' },
-                    // Added '-' chip strictly, and restored the mobile UI fix.
                     { key: 'lang', label: '语言', syntax: 'lang:{val}', placeholder: 'zh-CN', desc: 'Language', chips: ['-'] },
                     { key: 'country', label: '国家', syntax: 'country:{val}', placeholder: 'US', desc: 'Country Code' },
                     { key: 'region', label: '区域', syntax: 'region:{val}', placeholder: 'uk', desc: 'Region Code' },
@@ -564,7 +691,7 @@
             }
         };
 
-        // --- 3. Rendering & Logic ---
+        // --- 4. Rendering & Logic ---
         function applyRandomTheme() {
             const root = document.documentElement;
             root.style.setProperty('--bg-blob-1', getRandomColor());
@@ -573,8 +700,13 @@
 
             const navPanel = document.getElementById('nav-panel');
             navPanel.style.backgroundColor = hexToRgba(getRandomColor(), 0.2); 
-            document.getElementById('search-btn').style.backgroundColor = getRandomColor();
             
+            const searchBtn = document.getElementById('search-btn');
+            searchBtn.style.backgroundColor = getRandomColor();
+            // Ensure contrast for button text
+            searchBtn.classList.remove('text-white');
+            searchBtn.classList.add('text-white');
+
             document.querySelectorAll('.category-card').forEach(card => {
                 const cardColor = getRandomColor();
                 card.dataset.tint = cardColor;
@@ -674,17 +806,13 @@
 
         function createInputRow(item) {
             const row = document.createElement('div');
-            // FIX: mobile UI排版bug fix: ensure all containers are flexible and don't force width
             row.className = 'flex flex-col sm:flex-row gap-3 p-3 rounded-apple bg-white/40 dark:bg-black/20 hover:bg-white/60 dark:hover:bg-black/30 transition-colors duration-200 animate-slide-down group/row border border-white/30 dark:border-white/5 relative z-10 items-start sm:items-center min-w-0';
             row.dataset.syntax = item.syntax;
             row.dataset.type = item.type || 'standard';
 
-            // 1. Label and Actions Container (Flex to allow actions on the right)
             const labelActionsWrapper = document.createElement('div');
-            // w-full on mobile, flex-shrink-0 on desktop
             labelActionsWrapper.className = 'flex items-center justify-between w-full sm:w-auto sm:flex-shrink-0';
             
-            // 1.1 Label
             const labelDiv = document.createElement('div');
             labelDiv.className = 'flex flex-col justify-center pl-1';
             labelDiv.innerHTML = `
@@ -692,13 +820,10 @@
                 <span class="text-[10px] font-mono opacity-40 mt-0.5 select-none truncate">${item.syntax.split(':')[0]}</span>
             `;
             
-            // 1.2 Actions (Green + and Red X, placed right of the label)
             const actions = document.createElement('div');
-            // FIX: Changed order and position as requested (Green + then Red X)
             actions.className = 'flex items-center gap-1 opacity-60 group-hover/row:opacity-100 transition-opacity flex-shrink-0 ml-4'; 
             const btnClass = "w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-200 bg-white/30 dark:bg-black/20 cursor-pointer";
             
-            // Green + (Left)
             const addBtn = document.createElement('button');
             addBtn.className = `${btnClass} hover:bg-green-500 hover:text-white text-green-600/70`;
             addBtn.innerHTML = '<i class="fa-solid fa-plus text-[10px]"></i>';
@@ -708,7 +833,6 @@
                 setTimeout(() => newRow.querySelector('input').focus(), 50);
             };
 
-            // Red X (Right/Most Right)
             const removeBtn = document.createElement('button');
             removeBtn.className = `${btnClass} hover:bg-red-500 hover:text-white text-red-500/60`;
             removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
@@ -727,20 +851,16 @@
             labelActionsWrapper.append(labelDiv, actions);
 
 
-            // 2. Input Container
             const inputContainer = document.createElement('div');
-            // FIX: min-w-0 allows child inputs to shrink instead of overflowing
             inputContainer.className = 'flex-grow flex flex-col w-full gap-2 min-w-0';
             
             const inputsWrapper = document.createElement('div');
-            // FIX: min-w-0 ensures this flex container doesn't force width on small screens
             inputsWrapper.className = 'flex items-center gap-2 w-full min-w-0';
 
             const uniqueId = `inp-${Math.random().toString(36).substr(2,9)}`;
 
             // --- Render Logic Based on Type ---
             if (item.type === 'range' || item.type === 'daterange') {
-                // FIX: flex-1 combined with min-w-0 ensures equal split without overflow
                 inputsWrapper.innerHTML = `
                     <input type="text" class="flex-1 min-w-0 h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="Start" oninput="rebuildQuery()">
                     <span class="opacity-30 font-bold flex-shrink-0">~</span>
@@ -748,7 +868,6 @@
                 `;
             } 
             else if (item.type === 'date_triple') {
-                // FIX: flex-1 with min-w-0 or specific widths that sum to < 100%
                 inputsWrapper.innerHTML = `
                     <input type="text" class="flex-1 min-w-0 h-10 px-2 rounded-apple glass-input text-sm font-mono text-center" placeholder="YYYY" maxlength="4" oninput="rebuildQuery()">
                     <span class="opacity-30 font-bold flex-shrink-0">-</span>
@@ -774,7 +893,6 @@
                 // --- Simple Chips (e.g., '-' for language in Geo/Time) ---
                 if (item.chips) {
                     const chipContainer = document.createElement('div');
-                    // Changed ml-1 to ml-0 for better mobile alignment
                     chipContainer.className = "flex gap-1 shrink-0"; 
                     item.chips.forEach(suffix => {
                         const chip = document.createElement('button');
@@ -783,7 +901,6 @@
                         chip.onclick = (e) => {
                             e.preventDefault();
                             const inp = document.getElementById(uniqueId);
-                            // Only append if value is empty or not already ending with the suffix
                             if (!inp.value.endsWith(suffix)) { 
                                 inp.value += suffix; 
                             }
@@ -814,7 +931,6 @@
                     group.items.forEach(chipItem => {
                         const chip = document.createElement('button');
                         chip.className = 'input-chip';
-                        // Dot prefix handled in value
                         chip.innerText = '.' + chipItem.val;
                         chip.title = chipItem.label;
                         chip.onclick = (e) => {
@@ -830,7 +946,6 @@
                 inputContainer.appendChild(groupContainer);
             }
 
-            // FIX: Appending the label/actions wrapper and then the input container
             row.append(labelActionsWrapper, inputContainer);
             return row;
         }
@@ -858,7 +973,6 @@
                     const y = inputs[0].value.trim();
                     const m = inputs[1].value.trim();
                     const d = inputs[2].value.trim();
-                    // Only build syntax if all three parts are present
                     if (y && m && d) {
                         res = syntax.replace('{val}', `${y}-${m}-${d}`);
                     }
@@ -870,19 +984,20 @@
                         res = syntax.replace('{val}', `${w}x${h}`);
                     }
                 }
+                else if (type === 'func_arg' && item.key === 'around') {
+                     res = syntax.replace('{val}', v1);
+                } 
                 else if (type === 'logic_or') {
                     const terms = v1.split(/[,，]/).map(t => t.trim()).filter(t => t);
                     if (terms.length > 1) res = `(${terms.join(' OR ')})`;
                     else if (terms.length === 1) res = terms[0];
                 } 
                 else if (type === 'logic_and') {
-                    // Logic AND Fix: Join with ' AND '
                     const terms = v1.split(/[,，]/).map(t => t.trim()).filter(t => t);
                     if (terms.length > 1) res = `(${terms.join(' AND ')})`;
                     else if (terms.length === 1) res = terms[0];
-                }
+                } 
                 else if (type === 'wildcard') {
-                    // Fix wildcard output to be *ABC*
                     res = syntax.replace('{val}', v1);
                 }
                 else {
@@ -898,23 +1013,34 @@
         function executeSearch() {
             const query = document.getElementById('main-query').value.trim();
             if (!query) { showToast("⚠️ 内容为空"); return; }
-            const engine = document.getElementById('engine-select').value;
-            let url = '';
-            switch(engine) {
-                case 'google': url = `https://www.google.com/search?q=${encodeURIComponent(query)}`; break;
-                case 'bing': url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`; break;
-                case 'duckduckgo': url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`; break;
-                case 'yandex': url = `https://yandex.com/search/?text=${encodeURIComponent(query)}`; break;
-                case 'brave': url = `https://search.brave.com/search?q=${encodeURIComponent(query)}`; break;
-                case 'metaso': url = `https://metaso.cn/?q=${encodeURIComponent(query)}`; break;
+            const engineKey = document.getElementById('engine-select').value;
+            const engine = engineList[engineKey];
+
+            if (!engine) {
+                showToast("❌ 搜索引擎无效");
+                return;
             }
+
+            const encodedQuery = encodeURIComponent(query);
+            let url = '';
+
+            if (engine.type === 'qwant') {
+                // Qwant special case: https://www.qwant.com/?q=(111)&t=web. Query replaces (111).
+                url = `${engine.url}${encodedQuery}&t=web`;
+            } else if (engine.type === 'placeholder') {
+                // Placeholder special case: uses %s
+                url = engine.url.replace('%s', encodedQuery);
+            } else {
+                // Standard handling: ?q=, ?text=, or ?query= at the end
+                url = engine.url + encodedQuery;
+            }
+            
             window.open(url, '_blank');
         }
 
         function copyQuery() {
             const input = document.getElementById('main-query');
             if(!input.value) return;
-            // Use execCommand for broader compatibility in sandboxed environments
             input.select();
             document.execCommand('copy');
             showToast("✨ 已复制");
@@ -949,21 +1075,44 @@
             }
         }
         
-        // UPDATED: Added colorClass parameter
-        function selectEngine(value, label, iconClass, colorClass) {
-            document.getElementById('engine-select').value = value;
-            // Apply icon and color class to the label
-            document.getElementById('current-engine-label').innerHTML = `<i class="${iconClass} mr-2 ${colorClass}"></i>${label}`;
+        // Refactored to use the engineList map
+        function selectEngine(key) {
+            const engine = engineList[key];
+            if (!engine) return;
+
+            document.getElementById('engine-select').value = key;
             
-            // Highlight selected
+            // Update the trigger label with correct icon and color
+            document.getElementById('current-engine-label').innerHTML = `<i class="${engine.icon} mr-2 ${engine.color}"></i>${engine.label}`;
+            
+            // Highlight selected option
             document.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
-            // Use event.target to find the correct option element, traversing up if necessary
-            let targetOption = event.target.closest('.custom-option');
-            if (targetOption) {
-                 targetOption.classList.add('selected');
+            // Find the corresponding option element using data attribute or by key
+            const selectedOption = document.querySelector(`.custom-option[data-key="${key}"]`);
+            if (selectedOption) {
+                 selectedOption.classList.add('selected');
             }
             
             toggleEngineMenu(); // Close
+        }
+
+        // Dynamically renders the engine menu from the engineList map
+        function renderEngineMenu() {
+            const menu = document.getElementById('engine-menu');
+            menu.innerHTML = '';
+            const currentKey = document.getElementById('engine-select').value;
+
+            Object.entries(engineList).forEach(([key, engine]) => {
+                const isSelected = key === currentKey;
+                const option = document.createElement('div');
+                
+                option.className = `custom-option ${isSelected ? 'selected' : ''}`;
+                option.dataset.key = key;
+                option.setAttribute('onclick', `selectEngine('${key}')`);
+                
+                option.innerHTML = `<i class="${engine.icon} mr-2 w-5 ${engine.color}"></i>${engine.label}`;
+                menu.appendChild(option);
+            });
         }
         
         // Close menu when clicking outside
@@ -974,10 +1123,21 @@
                 toggleEngineMenu();
             }
         });
+        
+        function setInitialEngine() {
+             const defaultKey = document.getElementById('engine-select').value;
+             const defaultEngine = engineList[defaultKey];
+             if (defaultEngine) {
+                 document.getElementById('current-engine-label').innerHTML = `<i class="${defaultEngine.icon} mr-2 ${defaultEngine.color}"></i>${defaultEngine.label}`;
+             }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             applyRandomTheme();
             renderApp();
+            setInitialEngine();
+            renderEngineMenu(); // Render menu after engine selection is set up
+            
             document.addEventListener('keydown', (e) => {
                 if(e.key === 'Enter' && document.activeElement.tagName === 'INPUT') executeSearch();
             });
