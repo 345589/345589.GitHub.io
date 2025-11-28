@@ -9,7 +9,7 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght=400;500&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -248,8 +248,8 @@
         .custom-select-menu {
             position: absolute; 
             top: calc(100% + 8px); 
-            /* FIX: Use right:0 to anchor to the right edge of the container */
-            right: 0; 
+            /* FIX 1: Adjust position to left: 15px to move it slightly right of the container's left edge */
+            left: 15px; 
             width: 180px;
             /* Liquid Glass Effect */
             background: rgba(255, 255, 255, 0.85); /* More opaque for visibility */
@@ -261,7 +261,7 @@
             box-shadow: 0 20px 50px -10px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.3) inset;
             z-index: 100;
             opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.95);
-            transform-origin: top right; /* Anchor animation to top right */
+            transform-origin: top left; /* Anchor animation to top left for left-based positioning */
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy Apple spring */
         }
         html.dark .custom-select-menu {
@@ -294,6 +294,13 @@
         html.dark .custom-option.selected {
             background: rgba(99, 102, 241, 0.3);
             color: #a5b4fc;
+        }
+        /* Override default text color for icon to keep the brand color */
+        .custom-option .fa-brands, .custom-option .fa-solid {
+            color: currentColor; /* Default to text color for uncolored icons */
+        }
+        .custom-option .text-current {
+            color: currentColor !important; /* Ensure icons without explicit color use text color */
         }
 
         ::-webkit-scrollbar { width: 0; }
@@ -359,23 +366,28 @@
                     <div class="flex gap-2 shrink-0 h-12 relative z-50">
                         <!-- Custom Engine Selector (Replaces <select>) -->
                         <div class="relative h-full" id="engine-selector-container">
+                            <!-- Initial state includes the color class for Google -->
                             <div id="engine-trigger" class="custom-select-trigger glass-input rounded-apple text-sm font-bold min-w-[140px]" onclick="toggleEngineMenu()">
-                                <span id="current-engine-label"><i class="fa-brands fa-google mr-2"></i>Google</span>
-                                <i class="fa-solid fa-chevron-down text-[10px] opacity-50 transition-transform" id="engine-chevron"></i>
+                                <span id="current-engine-label"><i class="fa-brands fa-google mr-2 text-blue-500"></i>Google</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] opacity-50 transition-transform" id="engine-chevron"></i>
                             </div>
                             
                             <!-- Hidden Data Input -->
                             <input type="hidden" id="engine-select" value="google">
 
                             <!-- Dropdown Menu -->
-                            <!-- FIX: The custom-select-menu CSS is set to right: 0 to fix the left overflow issue. -->
                             <div id="engine-menu" class="custom-select-menu">
-                                <div class="custom-option selected" onclick="selectEngine('google', 'Google', 'fa-brands fa-google')"><i class="fa-brands fa-google w-5"></i>Google</div>
-                                <div class="custom-option" onclick="selectEngine('bing', 'Bing', 'fa-brands fa-microsoft')"><i class="fa-brands fa-microsoft w-5"></i>Bing</div>
-                                <div class="custom-option" onclick="selectEngine('metaso', '秘塔 (Metaso)', 'fa-solid fa-brain')"><i class="fa-solid fa-brain w-5"></i>秘塔</div>
-                                <div class="custom-option" onclick="selectEngine('duckduckgo', 'DuckDuckGo', 'fa-solid fa-shield-cat')"><i class="fa-solid fa-shield-cat w-5"></i>DuckDuckGo</div>
-                                <div class="custom-option" onclick="selectEngine('yandex', 'Yandex', 'fa-brands fa-yandex')"><i class="fa-brands fa-yandex w-5"></i>Yandex</div>
-                                <div class="custom-option" onclick="selectEngine('brave', 'Brave', 'fa-solid fa-lion')"><i class="fa-solid fa-lion w-5"></i>Brave</div>
+                                <!-- UPDATED: Added color classes to icons and selectEngine function calls -->
+                                <div class="custom-option selected" onclick="selectEngine('google', 'Google', 'fa-brands fa-google', 'text-blue-500')"><i class="fa-brands fa-google w-5 text-blue-500"></i>Google</div>
+                                <div class="custom-option" onclick="selectEngine('bing', 'Bing', 'fa-brands fa-microsoft', 'text-yellow-500')"><i class="fa-brands fa-microsoft w-5 text-yellow-500"></i>Bing</div>
+                                <!-- 秘塔 (Metaso) - Using a dark purple/indigo for AI/Tech -->
+                                <div class="custom-option" onclick="selectEngine('metaso', '秘塔 (Metaso)', 'fa-solid fa-brain', 'text-indigo-600')"><i class="fa-solid fa-brain w-5 text-indigo-600"></i>秘塔</div>
+                                <!-- DuckDuckGo - Using a vibrant orange for the Duck logo -->
+                                <div class="custom-option" onclick="selectEngine('duckduckgo', 'DuckDuckGo', 'fa-solid fa-shield-cat', 'text-orange-500')"><i class="fa-solid fa-shield-cat w-5 text-orange-500"></i>DuckDuckGo</div>
+                                <!-- Yandex - Using a bright red for its primary brand color -->
+                                <div class="custom-option" onclick="selectEngine('yandex', 'Yandex', 'fa-brands fa-yandex', 'text-red-700')"><i class="fa-brands fa-yandex w-5 text-red-700"></i>Yandex</div>
+                                <!-- Brave - Using a vibrant orange for the Brave lion logo -->
+                                <div class="custom-option" onclick="selectEngine('brave', 'Brave', 'fa-solid fa-mask', 'text-orange-500')"><i class="fa-solid fa-mask w-5 text-orange-500"></i>Brave</div>
                             </div>
                         </div>
 
@@ -388,7 +400,8 @@
         </div>
     </nav>
 
-    <div class="h-[140px]"></div>
+    <!-- FIX 2: Increased padding to h-[167px] (140 + 27 = 167) to push content down -->
+    <div class="h-[167px]"></div>
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 pb-20">
@@ -936,9 +949,11 @@
             }
         }
         
-        function selectEngine(value, label, iconClass) {
+        // UPDATED: Added colorClass parameter
+        function selectEngine(value, label, iconClass, colorClass) {
             document.getElementById('engine-select').value = value;
-            document.getElementById('current-engine-label').innerHTML = `<i class="${iconClass} mr-2"></i>${label}`;
+            // Apply icon and color class to the label
+            document.getElementById('current-engine-label').innerHTML = `<i class="${iconClass} mr-2 ${colorClass}"></i>${label}`;
             
             // Highlight selected
             document.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
