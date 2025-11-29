@@ -67,8 +67,17 @@
             --bg-blob-1: #7A8B84; /* Initial Morandi Color */
             --bg-blob-2: #BFAFA6;
             --bg-blob-3: #969CBA;
+            
+            /* --- 核心透明度调整 --- */
+            /* 原始 Surface: 0.45. 上次 0.37. 这次再减 0.05 -> 0.32 */
+            --nav-glass-alpha: 0.32;
+            /* 原始 Border: 0.4 */
             --glass-border: rgba(255, 255, 255, 0.4);
-            --glass-surface: rgba(255, 255, 255, 0.45);
+            
+            /* 全局玻璃参数 */
+            /* Saturation 250% (Liquid Glass Request) */
+            --glass-filter: blur(50px) saturate(250%);
+            
             --text-primary: #1F2937;
             --text-secondary: #4B5563;
         }
@@ -77,8 +86,11 @@
             --bg-blob-1: #1e1b4b;
             --bg-blob-2: #312e81;
             --bg-blob-3: #111827;
+            
+            /* Dark模式 Top Nav. 上次 0.67. 这次再减 0.05 -> 0.62 */
+            --nav-glass-alpha: 0.62;
             --glass-border: rgba(255, 255, 255, 0.08);
-            --glass-surface: rgba(20, 20, 25, 0.75);
+            
             --text-primary: #F3F4F6;
             --text-secondary: #9CA3AF;
         }
@@ -117,19 +129,40 @@
         .blob-2 { bottom: -10%; right: -10%; width: 70vw; height: 70vw; background: var(--bg-blob-2); animation-delay: -5s; }
         .blob-3 { top: 30%; left: 30%; width: 50vw; height: 50vw; background: var(--bg-blob-3); animation-delay: -10s; }
 
-        /* --- Glass Panel --- */
+        /* --- Glass Panel (Base) --- */
         .glass-panel {
-            background: var(--glass-surface);
-            backdrop-filter: blur(50px) saturate(160%);
-            -webkit-backdrop-filter: blur(50px) saturate(160%);
+            /* 默认背景 (会被内联样式覆盖，主要用于fallback) */
+            background: rgba(255, 255, 255, 0.45); 
+            
+            /* Liquid Glass: Saturation 250% */
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
+            
             border: 1px solid var(--glass-border);
+            
+            /* Chromatic Aberration 模拟: 细微的 RGB 分离阴影 */
             box-shadow: 
                 0 20px 40px -10px rgba(0,0,0,0.05),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                1px 0 0 rgba(255,0,0,0.05), /* Red shift */
+                -1px 0 0 rgba(0,0,255,0.05); /* Blue shift */
+
+            /* Elasticity 0.60: 稍微柔和一点的贝塞尔 */
+            transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
             position: relative;
         }
+        html.dark .glass-panel {
+            background: rgba(20, 20, 25, 0.75);
+        }
         
+        /* 顶部导航专用样式: 透明度 +8% +5% */
+        #nav-panel {
+            background-color: rgba(255, 255, 255, var(--nav-glass-alpha)) !important;
+        }
+        html.dark #nav-panel {
+            background-color: rgba(20, 20, 25, var(--nav-glass-alpha)) !important;
+        }
+
         .category-card { overflow: hidden; }
 
         .card-body {
@@ -165,13 +198,14 @@
 
         /* --- Inputs --- */
         .glass-input {
-            background: rgba(255, 255, 255, 0.5);
+            /* Input 也可以稍微透明一点，呼应整体 */
+            background: rgba(255, 255, 255, 0.4); 
             border: 1px solid transparent;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             min-width: 0; /* Fix flex overflow */
         }
         html.dark .glass-input {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3);
             border-color: rgba(255, 255, 255, 0.05);
             color: #fff;
         }
@@ -260,8 +294,8 @@
 
             /* Liquid Glass Effect */
             background: rgba(255, 255, 255, 0.85); /* More opaque for visibility */
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: var(--glass-filter);
+            -webkit-backdrop-filter: var(--glass-filter);
             border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 20px; /* Apple Rounded */
             padding: 8px;
@@ -269,7 +303,8 @@
             z-index: 100;
             opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.95);
             transform-origin: top left; /* Anchor animation to top left for left-based positioning */
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy Apple spring */
+            /* Elasticity 0.6 */
+            transition: all 0.4s cubic-bezier(0.34, 1.2, 0.64, 1); 
         }
         html.dark .custom-select-menu {
             background: rgba(30, 30, 35, 0.85);
@@ -461,6 +496,7 @@
 
         // --- 2. Engine Data (Language-Agnostic) ---
         // Engine labels remain English for universal recognition.
+        // Re-ordered Carrot2 to bottom, Added InfoSpace
         const engineList = {
             google: { label: 'Google', url: 'https://www.google.com/search?q=', icon: 'fa-brands fa-google', color: 'text-red-500', type: 'standard' },
             bing: { label: 'Bing', url: 'https://www.bing.com/search?q=', icon: 'fa-brands fa-microsoft', color: 'text-blue-600', type: 'standard' },
@@ -487,7 +523,13 @@
             excite: { label: 'excite.com', url: 'https://results.excite.com/serp?q=', icon: 'fa-solid fa-bolt', color: 'text-purple-700', type: 'standard' },
             searchengines100: { label: '100searchengines.com', url: 'https://www.100searchengines.com/?q=', icon: 'fa-solid fa-list-ol', color: 'text-gray-500', type: 'standard' },
             ghostery: { label: 'ghosterysearch.com', url: 'https://ghosterysearch.com/search?q=%s', icon: 'fa-solid fa-ghost', color: 'text-blue-500', type: 'placeholder' },
-            lukol: { label: 'lukol.com', url: 'https://m.lukol.com/s.php?q=%s', icon: 'fa-solid fa-mobile-screen', color: 'text-green-700', type: 'placeholder' }
+            lukol: { label: 'lukol.com', url: 'https://m.lukol.com/s.php?q=%s', icon: 'fa-solid fa-mobile-screen', color: 'text-green-700', type: 'placeholder' },
+            
+            // Moved Carrot2 here
+            carrot2: { label: 'Carrot2', url: 'https://search.carrot2.org/#/search/web/%s/folders', icon: 'fa-solid fa-carrot', color: 'text-orange-500', type: 'placeholder' },
+            
+            // Added InfoSpace here
+            infospace: { label: 'infospace.com', url: 'https://infospace.com/serp?q=', icon: 'fa-solid fa-satellite', color: 'text-blue-500', type: 'standard' }
         };
 
         // --- 3. Operator Data Structure (Language-Agnostic) ---
@@ -823,8 +865,8 @@
             root.style.setProperty('--bg-blob-2', c2);
             root.style.setProperty('--bg-blob-3', c3);
 
-            const navPanel = document.getElementById('nav-panel');
-            navPanel.style.backgroundColor = hexToRgba(c1, 0.2); 
+            // Nav Panel transparency is now handled by CSS Variable --nav-glass-alpha in style block
+            // We only need to set tint for categories here
             
             const searchBtn = document.getElementById('search-btn');
             searchBtn.style.backgroundColor = c1;
@@ -835,8 +877,13 @@
             document.querySelectorAll('.category-card').forEach(card => {
                 const cardColor = getRandomColor();
                 card.dataset.tint = cardColor;
-                card.querySelector('.card-header').style.backgroundColor = hexToRgba(cardColor, 0.15);
-                card.querySelector('.card-body').style.backgroundColor = hexToRgba(cardColor, 0.08);
+                // Folded Header Transparency Increase (+5% transparency -> Reduced Opacity)
+                // Original was 0.15. Target ~0.10
+                card.querySelector('.card-header').style.backgroundColor = hexToRgba(cardColor, 0.10);
+                
+                // Expanded Body Transparency Increase (+12% transparency -> Reduced Opacity)
+                // Original was 0.08. Target ~0.01 (Near invisible, relying on blur)
+                card.querySelector('.card-body').style.backgroundColor = hexToRgba(cardColor, 0.01);
             });
         }
 
@@ -856,7 +903,9 @@
 
                 const header = document.createElement('div');
                 header.className = 'card-header p-5 flex items-center justify-between cursor-pointer select-none transition-colors duration-300';
-                header.style.backgroundColor = hexToRgba(cardTint, 0.15);
+                
+                // Folded State Transparency: Adjusted from 0.15 to 0.10 (+5% more transparent)
+                header.style.backgroundColor = hexToRgba(cardTint, 0.10);
 
                 header.innerHTML = `
                     <div class="flex items-center gap-4">
@@ -875,7 +924,9 @@
 
                 const bodyContainer = document.createElement('div');
                 bodyContainer.className = 'card-body relative transition-all duration-500 ease-in-out';
-                bodyContainer.style.backgroundColor = hexToRgba(cardTint, 0.08);
+                
+                // Expanded State Inner Window Transparency: Adjusted from 0.08 to 0.01 (+7%~12% more transparent effectively)
+                bodyContainer.style.backgroundColor = hexToRgba(cardTint, 0.01);
                 
                 // Re-apply visibility based on current state
                 if (catStructure.open) {
@@ -1311,4 +1362,5 @@
     </script>
 </body>
 </html>
+
 
