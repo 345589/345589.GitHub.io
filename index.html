@@ -285,7 +285,7 @@
             top: calc(100% + 8px); 
             /* Adjust position to left: 15px to move it slightly right of the container's left edge */
             left: 15px; 
-            width: 250px; /* Increased width to accommodate long domain names */
+            width: 280px; /* Increased width to accommodate long domain names */
             
             /* --- CORE CHANGE: Set Max Height and Enable Scrolling --- */
             max-height: 400px; /* Set a fixed max height (approx. 7-8 options) */
@@ -338,7 +338,7 @@
             color: #a5b4fc;
         }
         /* Override default text color for icon to keep the brand color */
-        .custom-option .fa-brands, .custom-option .fa-solid {
+        .custom-option .fa-brands, .custom-option .fa-solid, .custom-option .fa-regular {
             color: currentColor; /* Default to text color for uncolored icons */
         }
         .custom-option .text-current {
@@ -504,6 +504,15 @@
             duckduckgo: { label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=', icon: 'fa-solid fa-search-dollar', color: 'text-orange-500', type: 'standard' },
             yandex: { label: 'Yandex', url: 'https://yandex.com/search/?text=', icon: 'fa-brands fa-yandex', color: 'text-red-700', type: 'standard' },
             brave: { label: 'Brave', url: 'https://search.brave.com/search?q=', icon: 'fa-solid fa-mask', color: 'text-orange-600', type: 'standard' },
+            
+            // --- Group 1: Added after Brave ---
+            freespoke: { label: '总是看两面freespoke.com', url: 'https://freespoke.com/search/web?q=（111）', icon: 'fa-solid fa-scale-balanced', color: 'text-gray-600', type: 'placeholder' },
+            swisscows: { label: 'swisscows.com', url: 'https://swisscows.com/en/web?query=（111）', icon: 'fa-solid fa-shield-halved', color: 'text-red-800', type: 'placeholder' },
+            yaru: { label: 'ya.ru', url: 'https://ya.ru/search/touch/?text=（111）', icon: 'fa-brands fa-yandex', color: 'text-red-600', type: 'placeholder' },
+            yep: { label: 'yep.com', url: 'https://yep.com/web?q=（111）', icon: 'fa-solid fa-check-double', color: 'text-yellow-500', type: 'placeholder' },
+            rambler: { label: 'nova.rambler.ru', url: 'https://nova.rambler.ru/search?query=（111）', icon: 'fa-solid fa-compass', color: 'text-blue-800', type: 'placeholder' },
+            // ----------------------------------
+
             perplexity: { label: 'perplexity.ai', url: 'https://www.perplexity.ai/search?q=', icon: 'fa-solid fa-wand-magic-sparkles', color: 'text-blue-700', type: 'standard' },
             yahoo: { label: 'yahoo.com', url: 'https://search.yahoo.com/search?q=', icon: 'fa-brands fa-yahoo', color: 'text-purple-600', type: 'standard' },
             qwant: { label: 'qwant.com', url: 'https://www.qwant.com/?q=', icon: 'fa-solid fa-dice', color: 'text-pink-500', type: 'qwant' },
@@ -524,12 +533,20 @@
             searchengines100: { label: '100searchengines.com', url: 'https://www.100searchengines.com/?q=', icon: 'fa-solid fa-list-ol', color: 'text-gray-500', type: 'standard' },
             ghostery: { label: 'ghosterysearch.com', url: 'https://ghosterysearch.com/search?q=%s', icon: 'fa-solid fa-ghost', color: 'text-blue-500', type: 'placeholder' },
             lukol: { label: 'lukol.com', url: 'https://m.lukol.com/s.php?q=%s', icon: 'fa-solid fa-mobile-screen', color: 'text-green-700', type: 'placeholder' },
-            
-            // Moved Carrot2 here
             carrot2: { label: 'Carrot2', url: 'https://search.carrot2.org/#/search/web/%s/folders', icon: 'fa-solid fa-carrot', color: 'text-orange-500', type: 'placeholder' },
+            infospace: { label: 'infospace.com', url: 'https://infospace.com/serp?q=', icon: 'fa-solid fa-satellite', color: 'text-blue-500', type: 'standard' },
             
-            // Added InfoSpace here
-            infospace: { label: 'infospace.com', url: 'https://infospace.com/serp?q=', icon: 'fa-solid fa-satellite', color: 'text-blue-500', type: 'standard' }
+            // --- Group 2: Added after InfoSpace ---
+            boardreader: { label: 'Boardreader 搜索社区论坛', url: 'https://boardreader.com/s/（111）.html;language=English', icon: 'fa-solid fa-comments', color: 'text-orange-400', type: 'placeholder' },
+            zum: { label: '韩国 대한민국', url: 'https://m.search.zum.com/search.zum?method=uni&option=accu&id=10&query=（111）', icon: 'fa-solid fa-globe-asia', color: 'text-blue-500', type: 'placeholder' },
+            goodsearch: { label: 'good-search.org', url: 'https://good-search.org/en/search/?q=（111）', icon: 'fa-solid fa-heart', color: 'text-green-500', type: 'placeholder' },
+            kvasir: { label: 'kvasir.no', url: 'https://www.kvasir.no/alle/（111）', icon: 'fa-solid fa-book', color: 'text-red-500', type: 'placeholder' },
+            webcrawler: { label: 'webcrawler.com', url: 'https://www.webcrawler.com/serp?q=（111）&sc=aUkJEsVrF35010', icon: 'fa-solid fa-spider', color: 'text-indigo-400', type: 'placeholder' },
+            myallsearch: { label: 'myallsearch.com', url: 'https://www.myallsearch.com/search?q=（111）', icon: 'fa-solid fa-magnifying-glass-plus', color: 'text-cyan-600', type: 'placeholder' },
+            luxxle: { label: 'luxxle.com', url: 'https://luxxle.com/luxsearch?q=（111）', icon: 'fa-regular fa-lightbulb', color: 'text-yellow-400', type: 'placeholder' },
+            privacywall: { label: 'privacywall.org', url: 'https://www.privacywall.org/search/secure?q=（111）&cc=JP', icon: 'fa-solid fa-user-shield', color: 'text-green-600', type: 'placeholder' },
+            deepfind: { label: 'deepfind.co', url: 'https://www.deepfind.co/（111）', icon: 'fa-solid fa-database', color: 'text-slate-500', type: 'placeholder' }
+            // --------------------------------------
         };
 
         // --- 3. Operator Data Structure (Language-Agnostic) ---
@@ -1249,7 +1266,8 @@
             if (engine.type === 'qwant') {
                 url = `${engine.url}${encodedQuery}&t=web`;
             } else if (engine.type === 'placeholder') {
-                url = engine.url.replace('%s', encodedQuery);
+                // Modified to handle both %s and custom placeholder（111）
+                url = engine.url.replace('%s', encodedQuery).replace('（111）', encodedQuery);
             } else {
                 url = engine.url + encodedQuery;
             }
@@ -1362,5 +1380,4 @@
     </script>
 </body>
 </html>
-
 
