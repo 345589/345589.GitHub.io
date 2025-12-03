@@ -8,8 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght=400;500&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -17,8 +15,9 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Inter"', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
+                        // 使用系统默认字体栈
+                        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'],
                     },
                     animation: {
                         'float': 'float 20s ease-in-out infinite',
@@ -64,18 +63,12 @@
 
     <style>
         :root {
-            --bg-blob-1: #7A8B84; /* Initial Morandi Color */
+            --bg-blob-1: #7A8B84;
             --bg-blob-2: #BFAFA6;
             --bg-blob-3: #969CBA;
             
-            /* --- 核心透明度调整 --- */
-            /* 原始 Surface: 0.45. 上次 0.37. 这次再减 0.05 -> 0.32 */
             --nav-glass-alpha: 0.32;
-            /* 原始 Border: 0.4 */
             --glass-border: rgba(255, 255, 255, 0.4);
-            
-            /* 全局玻璃参数 */
-            /* Saturation 250% (Liquid Glass Request) */
             --glass-filter: blur(50px) saturate(250%);
             
             --text-primary: #1F2937;
@@ -87,7 +80,6 @@
             --bg-blob-2: #312e81;
             --bg-blob-3: #111827;
             
-            /* Dark模式 Top Nav. 上次 0.67. 这次再减 0.05 -> 0.62 */
             --nav-glass-alpha: 0.62;
             --glass-border: rgba(255, 255, 255, 0.08);
             
@@ -100,7 +92,8 @@
             color: var(--text-primary);
             transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
             overflow-x: hidden;
-            font-family: 'Inter', sans-serif;
+            /* 强制全站使用系统字体 */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         html.dark body {
             background-color: #050505;
@@ -131,23 +124,17 @@
 
         /* --- Glass Panel (Base) --- */
         .glass-panel {
-            /* 默认背景 (会被内联样式覆盖，主要用于fallback) */
             background: rgba(255, 255, 255, 0.45); 
-            
-            /* Liquid Glass: Saturation 250% */
             backdrop-filter: var(--glass-filter);
             -webkit-backdrop-filter: var(--glass-filter);
-            
             border: 1px solid var(--glass-border);
             
-            /* Chromatic Aberration 模拟: 细微的 RGB 分离阴影 */
+            /* 修复：移除红色和蓝色的 RGB 分离阴影 (Chromatic Aberration) */
             box-shadow: 
                 0 20px 40px -10px rgba(0,0,0,0.05),
-                inset 0 1px 0 rgba(255,255,255,0.2),
-                1px 0 0 rgba(255,0,0,0.05), /* Red shift */
-                -1px 0 0 rgba(0,0,255,0.05); /* Blue shift */
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            /* 移除了 1px 0 0 rgba(255,0,0,0.05) 和 -1px 0 0 rgba(0,0,255,0.05) */
 
-            /* Elasticity 0.60: 稍微柔和一点的贝塞尔 */
             transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
             position: relative;
         }
@@ -155,7 +142,6 @@
             background: rgba(20, 20, 25, 0.75);
         }
         
-        /* 顶部导航专用样式: 透明度 +8% +5% */
         #nav-panel {
             background-color: rgba(255, 255, 255, var(--nav-glass-alpha)) !important;
         }
@@ -168,7 +154,6 @@
         .card-body {
             position: relative;
         }
-        /* Fluid Shimmer */
         .card-body::before {
             content: '';
             position: absolute;
@@ -196,13 +181,11 @@
             box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
         }
 
-        /* --- Inputs --- */
         .glass-input {
-            /* Input 也可以稍微透明一点，呼应整体 */
             background: rgba(255, 255, 255, 0.4); 
             border: 1px solid transparent;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            min-width: 0; /* Fix flex overflow */
+            min-width: 0; 
         }
         html.dark .glass-input {
             background: rgba(0, 0, 0, 0.3);
@@ -219,7 +202,6 @@
             box-shadow: 0 0 0 4px rgba(255,255,255,0.1);
         }
 
-        /* Buttons */
         .action-btn {
             transition: all 0.2s;
             position: relative;
@@ -233,7 +215,6 @@
         }
         .action-btn:hover::after { opacity: 1; }
 
-        /* --- Side Strip --- */
         .side-strip {
             position: absolute; top: 0; bottom: 0; width: 20px;
             cursor: pointer; z-index: 20; transition: background-color 0.2s;
@@ -256,7 +237,6 @@
         html.dark .bottom-collapse-btn { background: rgba(255,255,255,0.02); border-top-color: rgba(255,255,255,0.05); }
         html.dark .bottom-collapse-btn:hover { background: rgba(255,255,255,0.08); }
 
-        /* Chips */
         .input-chip {
             padding: 2px 8px; font-size: 11px; font-weight: 600;
             border-radius: 6px; background: rgba(0,0,0,0.05);
@@ -267,12 +247,10 @@
         html.dark .input-chip { background: rgba(255,255,255,0.1); color: #ccc; }
         html.dark .input-chip:hover { background: rgba(255,255,255,0.2); }
         
-        /* Chip Group Headers */
         .chip-group-label {
             font-size: 10px; font-weight: 700; opacity: 0.5; margin-right: 4px; margin-left: 4px;
         }
 
-        /* Custom Dropdown Styling - Restored Apple Liquid Style */
         .custom-select-trigger {
             display: flex; align-items: center; justify-content: space-between;
             width: 100%; height: 100%; padding: 0 1.5rem;
@@ -283,27 +261,20 @@
         .custom-select-menu {
             position: absolute; 
             top: calc(100% + 8px); 
-            /* Adjust position to left: 15px to move it slightly right of the container's left edge */
             left: 15px; 
-            width: 280px; /* Increased width to accommodate long domain names */
-            
-            /* --- CORE CHANGE: Set Max Height and Enable Scrolling --- */
-            max-height: 400px; /* Set a fixed max height (approx. 7-8 options) */
-            overflow-y: auto; /* Enable vertical scrolling */
-            /* ----------------------------------------------------- */
-
-            /* Liquid Glass Effect */
-            background: rgba(255, 255, 255, 0.85); /* More opaque for visibility */
+            width: 280px;
+            max-height: 400px; 
+            overflow-y: auto; 
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: var(--glass-filter);
             -webkit-backdrop-filter: var(--glass-filter);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 20px; /* Apple Rounded */
+            border-radius: 20px; 
             padding: 8px;
             box-shadow: 0 20px 50px -10px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.3) inset;
             z-index: 100;
             opacity: 0; visibility: hidden; transform: translateY(-10px) scale(0.95);
-            transform-origin: top left; /* Anchor animation to top left for left-based positioning */
-            /* Elasticity 0.6 */
+            transform-origin: top left;
             transition: all 0.4s cubic-bezier(0.34, 1.2, 0.64, 1); 
         }
         html.dark .custom-select-menu {
@@ -330,22 +301,20 @@
             background: rgba(255,255,255,0.15);
         }
         .custom-option.selected {
-            background: rgba(99, 102, 241, 0.15); /* Indigo tint */
+            background: rgba(99, 102, 241, 0.15);
             color: #6366f1;
         }
         html.dark .custom-option.selected {
             background: rgba(99, 102, 241, 0.3);
             color: #a5b4fc;
         }
-        /* Override default text color for icon to keep the brand color */
         .custom-option .fa-brands, .custom-option .fa-solid, .custom-option .fa-regular {
-            color: currentColor; /* Default to text color for uncolored icons */
+            color: currentColor; 
         }
         .custom-option .text-current {
-            color: currentColor !important; /* Ensure icons without explicit color use text color */
+            color: currentColor !important;
         }
 
-        /* Adjust scrollbar visibility/style */
         .custom-select-menu::-webkit-scrollbar {
             width: 8px;
         }
@@ -356,7 +325,6 @@
         html.dark .custom-select-menu::-webkit-scrollbar-thumb {
             background-color: rgba(255,255,255,0.2);
         }
-        /* Keep main body scrollbar hidden */
         body::-webkit-scrollbar { width: 0; }
         
         .toast {
@@ -419,7 +387,8 @@
 
                 <div class="flex flex-col lg:flex-row gap-2 relative">
                     <div class="relative flex-grow group">
-                        <input type="text" id="main-query" placeholder="输入搜索词，或点击下方分类自动生成..." 
+                        <!-- Main Input: Added input listener for bi-directional sync -->
+                        <input type="text" id="main-query" oninput="syncToKeywordsInput(this.value)" placeholder="输入搜索词，或点击下方分类自动生成..." 
                             class="w-full h-12 pl-5 pr-12 rounded-apple glass-input text-lg font-mono placeholder-gray-400 dark:placeholder-gray-600">
                         <button onclick="copyQuery()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center opacity-40 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition" title="复制">
                             <i class="fa-regular fa-copy text-base"></i>
@@ -494,9 +463,7 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        // --- 2. Engine Data (Language-Agnostic) ---
-        // Engine labels remain English for universal recognition.
-        // Re-ordered Carrot2 to bottom, Added InfoSpace
+        // --- 2. Engine Data ---
         const engineList = {
             google: { label: 'Google', url: 'https://www.google.com/search?q=', icon: 'fa-brands fa-google', color: 'text-red-500', type: 'standard' },
             bing: { label: 'Bing', url: 'https://www.bing.com/search?q=', icon: 'fa-brands fa-microsoft', color: 'text-blue-600', type: 'standard' },
@@ -505,13 +472,11 @@
             yandex: { label: 'Yandex', url: 'https://yandex.com/search/?text=', icon: 'fa-brands fa-yandex', color: 'text-red-700', type: 'standard' },
             brave: { label: 'Brave', url: 'https://search.brave.com/search?q=', icon: 'fa-solid fa-mask', color: 'text-orange-600', type: 'standard' },
             
-            // --- Group 1: Added after Brave ---
             freespoke: { label: '总是看两面freespoke.com', url: 'https://freespoke.com/search/web?q=（111）', icon: 'fa-solid fa-scale-balanced', color: 'text-gray-600', type: 'placeholder' },
             swisscows: { label: 'swisscows.com', url: 'https://swisscows.com/en/web?query=（111）', icon: 'fa-solid fa-shield-halved', color: 'text-red-800', type: 'placeholder' },
             yaru: { label: 'ya.ru', url: 'https://ya.ru/search/touch/?text=（111）', icon: 'fa-brands fa-yandex', color: 'text-red-600', type: 'placeholder' },
             yep: { label: 'yep.com', url: 'https://yep.com/web?q=（111）', icon: 'fa-solid fa-check-double', color: 'text-yellow-500', type: 'placeholder' },
             rambler: { label: 'nova.rambler.ru', url: 'https://nova.rambler.ru/search?query=（111）', icon: 'fa-solid fa-compass', color: 'text-blue-800', type: 'placeholder' },
-            // ----------------------------------
 
             perplexity: { label: 'perplexity.ai', url: 'https://www.perplexity.ai/search?q=', icon: 'fa-solid fa-wand-magic-sparkles', color: 'text-blue-700', type: 'standard' },
             yahoo: { label: 'yahoo.com', url: 'https://search.yahoo.com/search?q=', icon: 'fa-brands fa-yahoo', color: 'text-purple-600', type: 'standard' },
@@ -536,7 +501,6 @@
             carrot2: { label: 'Carrot2', url: 'https://search.carrot2.org/#/search/web/%s/folders', icon: 'fa-solid fa-carrot', color: 'text-orange-500', type: 'placeholder' },
             infospace: { label: 'infospace.com', url: 'https://infospace.com/serp?q=', icon: 'fa-solid fa-satellite', color: 'text-blue-500', type: 'standard' },
             
-            // --- Group 2: Added after InfoSpace ---
             boardreader: { label: 'Boardreader 搜索社区论坛', url: 'https://boardreader.com/s/（111）.html;language=English', icon: 'fa-solid fa-comments', color: 'text-orange-400', type: 'placeholder' },
             zum: { label: '韩国 대한민국', url: 'https://m.search.zum.com/search.zum?method=uni&option=accu&id=10&query=（111）', icon: 'fa-solid fa-globe-asia', color: 'text-blue-500', type: 'placeholder' },
             goodsearch: { label: 'good-search.org', url: 'https://good-search.org/en/search/?q=（111）', icon: 'fa-solid fa-heart', color: 'text-green-500', type: 'placeholder' },
@@ -546,14 +510,15 @@
             luxxle: { label: 'luxxle.com', url: 'https://luxxle.com/luxsearch?q=（111）', icon: 'fa-regular fa-lightbulb', color: 'text-yellow-400', type: 'placeholder' },
             privacywall: { label: 'privacywall.org', url: 'https://www.privacywall.org/search/secure?q=（111）&cc=JP', icon: 'fa-solid fa-user-shield', color: 'text-green-600', type: 'placeholder' },
             deepfind: { label: 'deepfind.co', url: 'https://www.deepfind.co/（111）', icon: 'fa-solid fa-database', color: 'text-slate-500', type: 'placeholder' }
-            // --------------------------------------
         };
 
-        // --- 3. Operator Data Structure (Language-Agnostic) ---
+        // --- 3. Operator Data Structure ---
         const operatorData = {
             essentials: {
                 key: "essentials", icon: "fa-star", open: true,
                 items: [
+                    // Added: Keywords field to sync with main input
+                    { key: 'keywords', syntax: '{val}', type: 'standard' },
                     { key: 'exact', syntax: '"{val}"', type: 'standard' },
                     { key: 'or', syntax: 'OR', type: 'logic_or' },
                     { key: 'exclude', syntax: '-{val}', type: 'standard' },
@@ -625,6 +590,8 @@
                 items: [
                     { key: 'define', syntax: 'define:{val}', type: 'standard' },
                     { key: 'movie', syntax: 'movie:{val}', type: 'standard' },
+                    // Added Video
+                    { key: 'video', syntax: 'intitle:{val}', type: 'standard' }, 
                     { key: 'stocks', syntax: 'stocks:{val}', type: 'standard' },
                     { key: 'patent', syntax: 'patent:{val}', type: 'standard' },
                     { key: 'book', syntax: 'book:{val}', type: 'standard' },
@@ -635,7 +602,7 @@
             }
         };
 
-        // --- 4. Language Strings (Translated Content) ---
+        // --- 4. Language Strings ---
         const langStrings = {
             'zh-CN': {
                 searchBtn: '搜索',
@@ -652,6 +619,7 @@
                     essentials: {
                         title: "核心常用 (Essentials)", desc: "Google 搜索最强指令集",
                         items: {
+                            keywords: { label: '关键词 (Keywords)', placeholder: 'search terms', desc: '基础搜索词' },
                             exact: { label: '精确匹配', placeholder: 'exact phrase', desc: '强制匹配' },
                             or: { label: '逻辑或', placeholder: 'apple, android', desc: '任意其一' },
                             exclude: { label: '排除词 (-)', placeholder: 'advertising', desc: '排除结果' },
@@ -674,7 +642,7 @@
                         items: {
                             and: { label: '逻辑与', placeholder: 'AI, Ethics', desc: '同时包含' },
                             range: { label: '数值范围', placeholder: ['2010', '2025'], desc: '价格/年份' },
-                            single_quote: { label: '原词搜索', placeholder: 'colour', desc: '不纠错' },
+                            single_quote: { label: "单引号 ('')", placeholder: 'colour', desc: '原词搜索/不纠错' },
                             around: { label: '临近词', placeholder: '3', desc: '距离不超过N' },
                             hashtag: { label: '标签 (#)', placeholder: 'DeepLearning', desc: 'Tag' },
                             mention: { label: '提及 (@)', placeholder: 'elonmusk', desc: 'User' },
@@ -729,6 +697,7 @@
                         items: {
                             define: { label: '定义', placeholder: 'osmosis', desc: 'Dictionary' },
                             movie: { label: '电影', placeholder: 'Inception', desc: 'Movie' },
+                            video: { label: '视频', placeholder: 'tutorial', desc: 'Video Search' },
                             stocks: { label: '股票', placeholder: 'NVDA', desc: 'Stocks' },
                             patent: { label: '专利', placeholder: 'US1234567', desc: 'Patents' },
                             book: { label: '书籍', placeholder: 'Three Body', desc: 'Books' },
@@ -754,6 +723,7 @@
                     essentials: {
                         title: "Core Essentials", desc: "The most powerful set of Google search commands",
                         items: {
+                            keywords: { label: 'Keywords', placeholder: 'search terms', desc: 'Base terms' },
                             exact: { label: 'Exact Match', placeholder: 'exact phrase', desc: 'Force exact match' },
                             or: { label: 'Logical OR', placeholder: 'apple, android', desc: 'Either or' },
                             exclude: { label: 'Exclude Term (-)', placeholder: 'advertising', desc: 'Exclude results' },
@@ -776,7 +746,7 @@
                         items: {
                             and: { label: 'Logical AND', placeholder: 'AI, Ethics', desc: 'Include both' },
                             range: { label: 'Numeric Range', placeholder: ['2010', '2025'], desc: 'Price/Year' },
-                            single_quote: { label: 'Literal Search', placeholder: 'colour', desc: 'No spellcheck' },
+                            single_quote: { label: "Single Quote ('')", placeholder: 'colour', desc: 'No spellcheck' },
                             around: { label: 'Proximity', placeholder: '3', desc: 'Max N words apart' },
                             hashtag: { label: 'Hashtag (#)', placeholder: 'DeepLearning', desc: 'Tag' },
                             mention: { label: 'Mention (@)', placeholder: 'elonmusk', desc: 'User' },
@@ -831,6 +801,7 @@
                         items: {
                             define: { label: 'Define', placeholder: 'osmosis', desc: 'Dictionary' },
                             movie: { label: 'Movie', placeholder: 'Inception', desc: 'Movie' },
+                            video: { label: 'Video', placeholder: 'tutorial', desc: 'Video Search' },
                             stocks: { label: 'Stocks', placeholder: 'NVDA', desc: 'Stocks' },
                             patent: { label: 'Patent', placeholder: 'US1234567', desc: 'Patents' },
                             book: { label: 'Book', placeholder: 'Three Body', desc: 'Books' },
@@ -843,7 +814,7 @@
             }
         };
 
-        // --- 5. Language Functions (Updated for Global Switch) ---
+        // --- 5. Logic Updates ---
 
         function updateLangUI() {
             const strings = langStrings[currentLang];
@@ -862,7 +833,6 @@
             searchBtn.innerHTML = `<span>${strings.searchBtn}</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
             mainQueryInput.placeholder = strings.placeholder;
             
-            // Re-render the entire operator panel for language switch
             renderApp();
         }
         
@@ -871,7 +841,22 @@
             updateLangUI();
         }
 
-        // --- 6. Rendering & Logic (Refactored to use currentLang) ---
+        // --- Bi-directional Sync Logic ---
+        function syncToKeywordsInput(val) {
+            // Find the keywords input inside the operator container
+            // We use data-opkey="keywords" to find the row, then find the input inside it
+            const keywordsRow = document.querySelector('[data-opkey="keywords"]');
+            if(keywordsRow) {
+                const input = keywordsRow.querySelector('input');
+                if(input) {
+                    input.value = val;
+                    // Note: We do NOT call rebuildQuery here to avoid circular loop
+                    // The main query is the master when typing in top box.
+                }
+            }
+        }
+
+        // Logic Rendering
         function applyRandomTheme() {
             const root = document.documentElement;
             const c1 = getRandomColor();
@@ -882,24 +867,15 @@
             root.style.setProperty('--bg-blob-2', c2);
             root.style.setProperty('--bg-blob-3', c3);
 
-            // Nav Panel transparency is now handled by CSS Variable --nav-glass-alpha in style block
-            // We only need to set tint for categories here
-            
             const searchBtn = document.getElementById('search-btn');
             searchBtn.style.backgroundColor = c1;
             searchBtn.classList.remove('text-white');
             searchBtn.classList.add('text-white');
 
-            // Apply different tints for category cards for visual distinction
             document.querySelectorAll('.category-card').forEach(card => {
                 const cardColor = getRandomColor();
                 card.dataset.tint = cardColor;
-                // Folded Header Transparency Increase (+5% transparency -> Reduced Opacity)
-                // Original was 0.15. Target ~0.10
                 card.querySelector('.card-header').style.backgroundColor = hexToRgba(cardColor, 0.10);
-                
-                // Expanded Body Transparency Increase (+12% transparency -> Reduced Opacity)
-                // Original was 0.08. Target ~0.01 (Near invisible, relying on blur)
                 card.querySelector('.card-body').style.backgroundColor = hexToRgba(cardColor, 0.01);
             });
         }
@@ -910,10 +886,13 @@
             
             const langData = langStrings[currentLang];
             
+            // Retain the current value of the keywords if possible (for redraw)
+            const currentMainVal = document.getElementById('main-query').value;
+
             Object.entries(operatorData).forEach(([catKey, catStructure]) => {
                 const catLang = langData.operators[catKey];
 
-                const cardTint = getRandomColor(); // Re-use colors from random theme or get new ones
+                const cardTint = getRandomColor(); 
                 const section = document.createElement('div');
                 section.className = 'glass-panel rounded-panel transition-all duration-300 category-card group';
                 section.dataset.open = catStructure.open;
@@ -921,7 +900,6 @@
                 const header = document.createElement('div');
                 header.className = 'card-header p-5 flex items-center justify-between cursor-pointer select-none transition-colors duration-300';
                 
-                // Folded State Transparency: Adjusted from 0.15 to 0.10 (+5% more transparent)
                 header.style.backgroundColor = hexToRgba(cardTint, 0.10);
 
                 header.innerHTML = `
@@ -941,11 +919,8 @@
 
                 const bodyContainer = document.createElement('div');
                 bodyContainer.className = 'card-body relative transition-all duration-500 ease-in-out';
-                
-                // Expanded State Inner Window Transparency: Adjusted from 0.08 to 0.01 (+7%~12% more transparent effectively)
                 bodyContainer.style.backgroundColor = hexToRgba(cardTint, 0.01);
                 
-                // Re-apply visibility based on current state
                 if (catStructure.open) {
                     bodyContainer.style.maxHeight = '5000px';
                     bodyContainer.style.opacity = '1';
@@ -967,15 +942,21 @@
                 contentList.className = 'p-5 pt-2 grid gap-3 pl-8 pr-8';
                 
                 catStructure.items.forEach(item => {
-                    // Merge structural data (item) with translated data (langItem)
                     const langItem = catLang.items[item.key];
                     const mergedItem = {
                         ...item,
                         ...langItem,
-                        // Add chip groups if available (currently only for filetype)
                         chipGroups: item.key === 'filetype' ? langData.operators.essentials.chipGroups.filetype : undefined
                     };
-                    contentList.appendChild(createInputRow(mergedItem));
+                    const row = createInputRow(mergedItem);
+                    
+                    // Restore keyword value if re-rendering
+                    if(item.key === 'keywords' && currentMainVal) {
+                        const inp = row.querySelector('input');
+                        if(inp) inp.value = currentMainVal;
+                    }
+
+                    contentList.appendChild(row);
                 });
 
                 const bottomBtn = document.createElement('div');
@@ -987,7 +968,6 @@
 
                 header.onclick = () => {
                     const isOpen = bodyContainer.style.maxHeight !== '0px' && !bodyContainer.classList.contains('overflow-hidden');
-                    // Update state to remember if it was open
                     catStructure.open = !isOpen; 
                     toggleSection(section, header, bodyContainer, !isOpen);
                 };
@@ -1008,14 +988,12 @@
                 body.style.maxHeight = '0px';
                 body.style.opacity = '0';
                 iconWrapper.classList.remove('rotate-180');
-                // Ensure overflow-hidden is applied only after the transition
                 setTimeout(() => body.classList.add('overflow-hidden'), 500); 
             }
         }
 
         function createInputRow(item) {
             const row = document.createElement('div');
-            // Use item.key for specific identification and rebuild on language switch
             row.dataset.opkey = item.key; 
             row.className = 'flex flex-col sm:flex-row gap-3 p-3 rounded-apple bg-white/40 dark:bg-black/20 hover:bg-white/60 dark:hover:bg-black/30 transition-colors duration-200 animate-slide-down group/row border border-white/30 dark:border-white/5 relative z-10 items-start sm:items-center min-w-0';
             row.dataset.syntax = item.syntax;
@@ -1028,7 +1006,6 @@
             
             const labelDiv = document.createElement('div');
             labelDiv.className = 'flex flex-col justify-center pl-1';
-            // Use translated label and desc
             labelDiv.innerHTML = `
                 <span class="font-bold text-sm select-none">${item.label}</span>
                 <span class="text-[10px] font-mono opacity-40 mt-0.5 select-none truncate">${item.desc}</span>
@@ -1042,11 +1019,9 @@
             addBtn.className = `${btnClass} hover:bg-green-500 hover:text-white text-green-600/70`;
             addBtn.innerHTML = '<i class="fa-solid fa-plus text-[10px]"></i>';
             addBtn.onclick = () => {
-                // Find the original item structure using the key for correct recreation
                 const category = Object.values(operatorData).find(cat => cat.items.some(i => i.key === item.key));
                 const originalItem = category.items.find(i => i.key === item.key);
                 
-                // Get fresh merged item data for the new row
                 const langItem = langStrings[currentLang].operators[category.key].items[originalItem.key];
                 const newMergedItem = {
                     ...originalItem,
@@ -1063,15 +1038,11 @@
             removeBtn.className = `${btnClass} hover:bg-red-500 hover:text-white text-red-500/60`;
             removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
             removeBtn.onclick = () => {
-                // Use the item.key to find siblings for correct counting
                 const siblings = row.parentNode.querySelectorAll(`[data-opkey="${item.key}"]`);
-                
                 if(siblings.length > 1) {
-                    // If there are duplicates, remove this one
                     row.style.opacity = '0'; row.style.transform = 'translateY(-10px)';
                     setTimeout(() => { row.remove(); rebuildQuery(); }, 250);
                 } else {
-                    // If it's the last one, clear all inputs instead of removing the structure
                     row.querySelectorAll('input').forEach(i => i.value = '');
                     rebuildQuery();
                     showToast("✨ " + (langStringsForToast.toastCopied.includes('Copied') ? "Cleared content" : "内容已清空"));
@@ -1090,7 +1061,6 @@
 
             const uniqueId = `inp-${Math.random().toString(36).substr(2,9)}`;
 
-            // --- Render Logic Based on Type ---
             if (item.type === 'range' || item.type === 'daterange') {
                 const placeholder1 = Array.isArray(item.placeholder) ? item.placeholder[0] : 'Start';
                 const placeholder2 = Array.isArray(item.placeholder) ? item.placeholder[1] : 'End';
@@ -1124,10 +1094,8 @@
                  inputsWrapper.innerHTML = `<input type="number" class="w-20 h-10 px-3 rounded-apple glass-input text-sm font-mono" placeholder="${item.placeholder}" oninput="rebuildQuery()">`;
             } 
             else {
-                // Standard & Chips
                 inputsWrapper.innerHTML = `<input type="text" id="${uniqueId}" class="w-full h-10 px-3 rounded-apple glass-input text-sm font-mono min-w-0" placeholder="${item.placeholder}" oninput="rebuildQuery()">`;
                 
-                // --- Simple Chips (e.g., '-' for language in Geo/Time) ---
                 if (item.chips) {
                     const chipContainer = document.createElement('div');
                     chipContainer.className = "flex gap-1 shrink-0"; 
@@ -1150,7 +1118,6 @@
             }
             inputContainer.appendChild(inputsWrapper);
 
-            // --- Advanced Chip Groups (Filetypes) ---
             if (item.chipGroups && item.chipGroups.length > 0) {
                 const groupContainer = document.createElement('div');
                 groupContainer.className = "flex flex-wrap gap-y-2 gap-x-3 mt-1 pl-1";
@@ -1159,7 +1126,6 @@
                     const gDiv = document.createElement('div');
                     gDiv.className = "flex flex-wrap items-center gap-1";
                     
-                    // Group Label (e.g., Office)
                     const gLabel = document.createElement('span');
                     gLabel.className = "chip-group-label";
                     gLabel.innerText = group.name;
@@ -1197,7 +1163,7 @@
                 const type = row.dataset.type;
                 const syntax = row.dataset.syntax;
 
-                if (!v1 && type !== 'date_triple' && type !== 'dimension') return; // Skip if main value is empty
+                if (!v1 && type !== 'date_triple' && type !== 'dimension') return; 
 
                 let res = '';
 
@@ -1238,7 +1204,7 @@
                 else if (type === 'wildcard') {
                     res = syntax.replace('{val}', v1);
                 }
-                else if (v1) { // Standard operator case
+                else if (v1) { 
                     res = syntax.replace('{val}', v1);
                 }
 
@@ -1266,7 +1232,6 @@
             if (engine.type === 'qwant') {
                 url = `${engine.url}${encodedQuery}&t=web`;
             } else if (engine.type === 'placeholder') {
-                // Modified to handle both %s and custom placeholder（111）
                 url = engine.url.replace('%s', encodedQuery).replace('（111）', encodedQuery);
             } else {
                 url = engine.url + encodedQuery;
@@ -1300,7 +1265,6 @@
             }, 2000);
         }
 
-        // --- Custom Engine Selector Logic ---
         function toggleEngineMenu() {
             const menu = document.getElementById('engine-menu');
             const chevron = document.getElementById('engine-chevron');
@@ -1319,17 +1283,15 @@
 
             document.getElementById('engine-select').value = key;
             
-            // Update the trigger label with correct icon and color
             document.getElementById('current-engine-label').innerHTML = `<i class="${engine.icon} mr-2 ${engine.color}"></i>${engine.label}`;
             
-            // Highlight selected option
             document.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
             const selectedOption = document.querySelector(`.custom-option[data-key="${key}"]`);
             if (selectedOption) {
                  selectedOption.classList.add('selected');
             }
             
-            toggleEngineMenu(); // Close
+            toggleEngineMenu(); 
         }
 
         function renderEngineMenu() {
@@ -1350,7 +1312,6 @@
             });
         }
         
-        // Close menu when clicking outside
         document.addEventListener('click', (e) => {
             const container = document.getElementById('engine-selector-container');
             const menu = document.getElementById('engine-menu');
@@ -1369,7 +1330,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             applyRandomTheme();
-            updateLangUI(); // Now initializes all UI elements including operators
+            updateLangUI(); 
             setInitialEngine();
             renderEngineMenu(); 
             
@@ -1380,4 +1341,5 @@
     </script>
 </body>
 </html>
+
 
